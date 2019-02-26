@@ -11,8 +11,8 @@ const utilities = require( 'utilities' );
 
 
 // GLOBAL
-    const sellerId                      = 'ADD-YOUR-AMAZON-PAY-SELLER-ID-HERE';                             // Required; Amazon Pay seller ID 
-
+    const sellerId                      = '';                             // Required; Amazon Pay seller ID 
+// daneu@: should we rename to merchantId?
 // DIRECTIVE CONFIG
     const directiveType                 = 'Connections.SendRequest';                                        // Required;
     const connectionSetup               = 'Setup';                                                          // Required;    
@@ -27,7 +27,7 @@ const utilities = require( 'utilities' );
     const ledgerCurrency                = 'USD';                                                            // Required;
     const needAmazonShippingAddress     = true;                                                             // Optional; Must be boolean
     const sandboxMode                   = true;                                                             // Optional; Must be false for certification || production; Must be true for sandbox testing
-    const sandboxCustomerEmailId        = 'ADD-YOUR-AMAZON-PAY-SANDBOX-EMAIL-HERE';                         // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
+    const sandboxCustomerEmailId        = '';                         // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
 
 // PROCESS PAYMENT
 	const paymentAction 				= 'AuthorizeAndCapture'; 											// Required; Authorize or AuthorizeAndCapture
@@ -66,8 +66,8 @@ const utilities = require( 'utilities' );
 
 
 // LAUNCH INTENT
-    const launchRequestWelcomeTitle        = 'Welcome to '+ sellerStoreName; 
-	const launchRequestWelcomeResponse     = launchRequestWelcomeTitle +'. We have everything you need for the perfect shave.';
+    const launchRequestWelcomeTitle        = 'Welcome to '+ sellerStoreName + '. '; 
+	const launchRequestWelcomeResponse     = launchRequestWelcomeTitle +'We have everything you need for the perfect shave.';
 	const launchRequestQuestionResponse    = 'Are you interested in a starter kit, or refills?';
 
 // NO INTENT	
@@ -118,6 +118,8 @@ const utilities = require( 'utilities' );
 // HELP INTENT
     const helpCommandsIntentResponse       = 'To check order status, say "where is my order". To cancel an order, say "cancel order." To ask for a refund, say "refund."';
 
+    // Fallback INTENT
+    const fallbackHelpMessage = 'Sorry, I didn\'t get this one. ' + sellerStoreName + ' can help you with the following: ' + helpCommandsIntentResponse;
 
 /** 
     The following strings are used to output errors to test the skill
@@ -205,6 +207,8 @@ module.exports = {
     'refundOrderCardResponse':          refundOrderCardResponse,   
 
     'helpCommandsIntentResponse':       helpCommandsIntentResponse,
+
+    'fallbackHelpMessage':              fallbackHelpMessage,
 
     'orderTrackerTitle':                orderTrackerTitle,
     'orderTrackerIntentResponse':       orderTrackerIntentResponse,

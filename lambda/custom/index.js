@@ -357,14 +357,27 @@ const CancelOrderIntentHandler = {
 // Help the customer
 const HelpIntentHandler = {
     canHandle( handlerInput ) {
-        return handlerInput.requestEnvelope.request.type        === 'IntentRequest' && (
-               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent' ||
-               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.FallbackIntent');
+        return handlerInput.requestEnvelope.request.type        === 'IntentRequest' && 
+               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent';
     },
     handle( handlerInput ) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         return handlerInput.responseBuilder
                             .speak( config.helpCommandsIntentResponse )
+                            .withShouldEndSession( false )
+                            .getResponse( );
+    }
+};
+
+const FallbackIntentHandler = {
+    canHandle( handlerInput ) {
+        return handlerInput.requestEnvelope.request.type        === 'IntentRequest' && 
+               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.FallbackIntent';
+    },
+    handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
+        return handlerInput.responseBuilder
+                            .speak( config.fallbackHelpMessage )
                             .withShouldEndSession( false )
                             .getResponse( );
     }
@@ -492,7 +505,8 @@ exports.handler = askSDK.SkillBuilders
                             HelpIntentHandler,
                             OrderTrackerIntentHandler,
                             ExitSkillIntentHandler,
-                            SessionEndedRequestHandler )
+                            SessionEndedRequestHandler,
+                            FallbackIntentHandler )
                         .addRequestInterceptors( PersistenceRequestInterceptor )
                         .addResponseInterceptors( PersistenceResponseInterceptor )                        
                         .withPersistenceAdapter(
