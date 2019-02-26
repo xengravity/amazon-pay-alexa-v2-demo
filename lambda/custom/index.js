@@ -28,6 +28,7 @@ const LaunchRequestHandler = {
         return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
     },
     handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         // TODO: Remove workaround to reset setup status
         const { attributesManager }     = handlerInput;
         let attributes                  = attributesManager.getSessionAttributes( );
@@ -53,6 +54,7 @@ const InProgressStarterKitIntent = {
                request.dialogState !== 'COMPLETED';
     },
     handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         const currentIntent = handlerInput.requestEnvelope.request.intent;
 
         for ( const slotName of Object.keys( handlerInput.requestEnvelope.request.intent.slots ) ) {
@@ -197,6 +199,7 @@ const CompletedRefillIntentHandler = {
                request.dialogState  === 'COMPLETED';
     },
     handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         const filledSlots           = handlerInput.requestEnvelope.request.intent.slots;
         const slotValues            = utilities.getSlotValues( filledSlots );
         const yesNoResponse         = `${slotValues.RefillPurchaseIntentSlot.resolved}`;
@@ -221,6 +224,7 @@ const YesIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'AMAZON.YesIntent';
     },
     handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         // Did setup already happen?
         const { attributesManager }     = handlerInput;
         let attributes                  = attributesManager.getSessionAttributes( );             
@@ -244,7 +248,7 @@ const ConnectionsResponseHandler = {
         return handlerInput.requestEnvelope.request.type === 'Connections.Response';
     },
     handle( handlerInput ) {
-    	const consentToken 						    = utilities.getConsentToken( handlerInput );
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         const connectionName                  	    = handlerInput.requestEnvelope.request.name;
         const connectionResponsePayload       	    = handlerInput.requestEnvelope.request.payload;
         const connectionResponseStatusCode    	    = handlerInput.requestEnvelope.request.status.code;
@@ -324,10 +328,11 @@ const RefundOrderIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'RefundOrderIntent';
     },
     handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         return handlerInput.responseBuilder
             .speak( config.refundOrderIntentResponse )
             .withStandardCard( config.refundOrderTitle, config.refundOrderCardResponse, config.logoURL )
-            .withShouldEndSession( false )
+            .withShouldEndSession( true )
             .getResponse( );
     }
 };
@@ -340,10 +345,11 @@ const CancelOrderIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'CancelOrderIntent';
     },
     handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         return handlerInput.responseBuilder
             .speak( config.cancelOrderIntentResponse )
             .withStandardCard( config.cancelOrderTitle, config.cancelOrderCardResponse, config.logoURL )
-            .withShouldEndSession( false )
+            .withShouldEndSession( true )
             .getResponse( );
     }
 };
@@ -356,6 +362,7 @@ const HelpIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'AMAZON.FallbackIntent');
     },
     handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         return handlerInput.responseBuilder
                             .speak( config.helpCommandsIntentResponse )
                             .withShouldEndSession( false )
@@ -370,6 +377,7 @@ const OrderTrackerIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'OrderTrackerIntent';
     },
     handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         // Implement your code here to query the respective shipping service API's. This demo simply returns a static message.
         return handlerInput.responseBuilder
                             .speak( config.orderTrackerIntentResponse )
@@ -387,6 +395,7 @@ const ExitSkillIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'AMAZON.CancelIntent');
     },
     handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         return handlerInput.responseBuilder
                             // TODO: Get official response
                             .speak( 'see ya later!' )
@@ -400,8 +409,8 @@ const SessionEndedRequestHandler = {
         return handlerInput.requestEnvelope.request.type === 'SessionEndedRequest';
     },
     handle(handlerInput) {
-        utilities.debug(`Intent input: ${JSON.stringify(handlerInput)}`);
-        utilities.debug(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`)
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
+        console.log(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`)
         return handlerInput.responseBuilder.getResponse();
     },
 };
@@ -482,7 +491,7 @@ exports.handler = askSDK.SkillBuilders
                             CancelOrderIntentHandler,
                             HelpIntentHandler,
                             OrderTrackerIntentHandler,
-                            ExitSkillIntentHandler.
+                            ExitSkillIntentHandler,
                             SessionEndedRequestHandler )
                         .addRequestInterceptors( PersistenceRequestInterceptor )
                         .addResponseInterceptors( PersistenceResponseInterceptor )                        
