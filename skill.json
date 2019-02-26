@@ -51,7 +51,13 @@
       "containsAds": false,
       "allowsPurchases": true,
       "isExportCompliant": true,
-      "usesPersonalInfo": true
+      "usesPersonalInfo": true,
+      "locales": {
+        "en-US": {
+          "privacyPolicyUrl": "https://example.com",
+          "termsOfUseUrl": "https://example.com"
+        }
+      }
     }
   }
 }

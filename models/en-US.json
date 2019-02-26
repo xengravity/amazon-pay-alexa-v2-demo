@@ -126,17 +126,6 @@
                     "samples": []
                 },
                 {
-                    "name": "ExitSkillIntent",
-                    "slots": [],
-                    "samples": [
-                        "cancel",
-                        "stop",
-                        "exit",
-                        "quit",
-                        "close"
-                    ]
-                },
-                {
                     "name": "AMAZON.YesIntent",
                     "samples": [
                         "sure",
@@ -147,7 +136,12 @@
                 },
                 {
                     "name": "AMAZON.StopIntent",
-                    "samples": []
+                    "samples": [
+                        "stop",
+                        "exit",
+                        "quit",
+                        "close"
+                    ]
                 },
                 {
                     "name": "AMAZON.CancelIntent",

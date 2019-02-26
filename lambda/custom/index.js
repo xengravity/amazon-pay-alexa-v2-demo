@@ -379,13 +379,11 @@ const OrderTrackerIntentHandler = {
 };
 
 // I want to exit the skill
-// TODO: Investigate why all specified utterances do not trigger exit
 const ExitSkillIntentHandler = {
     canHandle( handlerInput ) {
-        return handlerInput.requestEnvelope.request.type        === 'IntentRequest' &&
-               handlerInput.requestEnvelope.request.intent.name === 'ExitSkillIntent' &&
-               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.StopIntent' &&
-               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.CancelIntent';
+        return handlerInput.requestEnvelope.request.type        === 'IntentRequest' && (
+               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.StopIntent' ||
+               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.CancelIntent');
     },
     handle( handlerInput ) {
         return handlerInput.responseBuilder
@@ -403,6 +401,7 @@ const ErrorHandler = {
     },
     handle( handlerInput, error ) {
         console.log( `Log from ErrorHandler: ${ error.message }` );
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         const speechText = config.errorUnknown + ' ' + error.message;
 
         return handlerInput.responseBuilder
@@ -476,7 +475,7 @@ exports.handler = askSDK.SkillBuilders
                         .addResponseInterceptors( PersistenceResponseInterceptor )                        
                         .withPersistenceAdapter(
                             persistence = new s3Adapter( 
-                                { bucketName: "no-nicks" } ))
+                                { bucketName: "no-nicks-daneu" } ))
                         .addErrorHandlers(
                             ErrorHandler )
 						.lambda( );
