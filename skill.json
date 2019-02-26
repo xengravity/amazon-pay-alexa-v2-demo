@@ -1,56 +1,57 @@
 {
-    "manifest": {
-        "publishingInformation": {
-            "isAvailableWorldwide": true,
-            "testingInstructions": "tbd",
-            "category": "SHOPPING",
-            "distributionMode": "PUBLIC",
-            "locales": {
-                "en-US": {
-                    "updatesDescription": "TBD",
-                    "name": "No Nicks",
-                    "description": "TBD",
-                    "keywords": [
-                        "no",
-                        "nicks",
-                        "shaving",
-                        "kit"
-                    ],
-                    "largeIconUri": "https://s3.amazonaws.com/CAPS-SSE/echo_developer/96f3/c5c84a64a51e498fa462c50974141ca3/APP_ICON_LARGE?versionId=E0Kk1TGSsweWB3o_QcxQ7At0kdNoCy6x&AWSAccessKeyId=AKIAJFEYRBGIHK2BBYKA&Expires=1551234610&Signature=mWyywF4GLJESNPfd51%2F1cAl6oDc%3D",
-                    "examplePhrases": [
-                        "Alexa, open No Nicks",
-                        "Alexa, ask No Nicks for a starter kit",
-                        "Alexa, ask No Nicks for refills"
-                    ],
-                    "summary": "TBD",
-                    "smallIconUri": "https://s3.amazonaws.com/CAPS-SSE/echo_developer/23bf/c2e52e552ee44a6099b06ac30bc713b4/APP_ICON?versionId=d6YX5pM5JDYLgTcFRTicg7KvFj8rAPBY&AWSAccessKeyId=AKIAJFEYRBGIHK2BBYKA&Expires=1551234610&Signature=uckMWx4MJaZDdeL5O0H5eM3WAVY%3D"
-                }
-            },
-            "distributionCountries": []
-        },
-        "apis": {
-            "custom": {
-                "endpoint": {
-                    "sourceDir": "lambda/custom"
-                },
-                "interfaces": []
-            }
-        },
-        "manifestVersion": "1.0",
-        "permissions": [
-            {
-                "name": "alexa::profile:given_name:read"
-            },
-            {
-                "name": "payments:autopay_consent"
-            }
-        ],
-        "privacyAndCompliance": {
-            "isChildDirected": false,
-            "containsAds": false,
-            "allowsPurchases": true,
-            "isExportCompliant": true,
-            "usesPersonalInfo": true
+  "manifest": {
+    "publishingInformation": {
+      "isAvailableWorldwide": true,
+      "testingInstructions": "tbd",
+      "category": "SHOPPING",
+      "distributionMode": "PUBLIC",
+      "locales": {
+        "en-US": {
+          "updatesDescription": "TBD",
+          "name": "No Nicks",
+          "description": "TBD",
+          "keywords": [
+            "no",
+            "nicks",
+            "shaving",
+            "kit"
+          ],
+          "largeIconUri": "https://s3.amazonaws.com/CAPS-SSE/echo_developer/96f3/c5c84a64a51e498fa462c50974141ca3/APP_ICON_LARGE?versionId=E0Kk1TGSsweWB3o_QcxQ7At0kdNoCy6x&AWSAccessKeyId=AKIAJFEYRBGIHK2BBYKA&Expires=1551234610&Signature=mWyywF4GLJESNPfd51%2F1cAl6oDc%3D",
+          "examplePhrases": [
+            "Alexa, open No Nicks",
+            "Alexa, ask No Nicks for a starter kit",
+            "Alexa, ask No Nicks for refills"
+          ],
+          "summary": "TBD",
+          "smallIconUri": "https://s3.amazonaws.com/CAPS-SSE/echo_developer/23bf/c2e52e552ee44a6099b06ac30bc713b4/APP_ICON?versionId=d6YX5pM5JDYLgTcFRTicg7KvFj8rAPBY&AWSAccessKeyId=AKIAJFEYRBGIHK2BBYKA&Expires=1551234610&Signature=uckMWx4MJaZDdeL5O0H5eM3WAVY%3D"
         }
+      },
+      "distributionCountries": []
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "sourceDir": "lambda/custom",
+          "uri": "ask-custom-no-nicks-default"
+        },
+        "interfaces": []
+      }
+    },
+    "manifestVersion": "1.0",
+    "permissions": [
+      {
+        "name": "alexa::profile:given_name:read"
+      },
+      {
+        "name": "payments:autopay_consent"
+      }
+    ],
+    "privacyAndCompliance": {
+      "isChildDirected": false,
+      "containsAds": false,
+      "allowsPurchases": true,
+      "isExportCompliant": true,
+      "usesPersonalInfo": true
     }
+  }
 }
