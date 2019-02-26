@@ -351,8 +351,9 @@ const CancelOrderIntentHandler = {
 // Help the customer
 const HelpIntentHandler = {
     canHandle( handlerInput ) {
-        return handlerInput.requestEnvelope.request.type        === 'IntentRequest' &&
-               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent';
+        return handlerInput.requestEnvelope.request.type        === 'IntentRequest' && (
+               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent' ||
+               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.FallbackIntent');
     },
     handle( handlerInput ) {
         return handlerInput.responseBuilder
@@ -392,6 +393,17 @@ const ExitSkillIntentHandler = {
                             .withShouldEndSession( true )
                             .getResponse( );
     }
+};
+
+const SessionEndedRequestHandler = {
+    canHandle(handlerInput) {
+        return handlerInput.requestEnvelope.request.type === 'SessionEndedRequest';
+    },
+    handle(handlerInput) {
+        utilities.debug(`Intent input: ${JSON.stringify(handlerInput)}`);
+        utilities.debug(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`)
+        return handlerInput.responseBuilder.getResponse();
+    },
 };
 
 // Generic error handling
@@ -470,7 +482,8 @@ exports.handler = askSDK.SkillBuilders
                             CancelOrderIntentHandler,
                             HelpIntentHandler,
                             OrderTrackerIntentHandler,
-                            ExitSkillIntentHandler )
+                            ExitSkillIntentHandler.
+                            SessionEndedRequestHandler )
                         .addRequestInterceptors( PersistenceRequestInterceptor )
                         .addResponseInterceptors( PersistenceResponseInterceptor )                        
                         .withPersistenceAdapter(

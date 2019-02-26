@@ -146,6 +146,10 @@
                 {
                     "name": "AMAZON.CancelIntent",
                     "samples": []
+                },
+                {
+                    "name": "AMAZON.FallbackIntent",
+                    "samples": []
                 }
             ],
             "types": [
