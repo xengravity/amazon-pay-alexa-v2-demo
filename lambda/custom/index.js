@@ -265,6 +265,20 @@ const YesIntentHandler = {
     }
 };
 
+
+// testing
+const NoIntentHandler = {
+    canHandle( handlerInput ) {
+        return handlerInput.requestEnvelope.request.type        === 'IntentRequest' &&
+               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.NoIntent';
+    },
+    handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
+        // Currently we do not do anything with "no" outside of other intents, directing to fallback
+        return FallbackIntentHandler.handle(handlerInput);
+    }
+};
+
 // You requested the Setup directive and are now receiving the Connections.Response
 const SetupConnectionsResponseHandler = {
     canHandle( handlerInput ) {
@@ -458,7 +472,10 @@ const SessionEndedRequestHandler = {
     handle(handlerInput) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         console.log(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`)
-        return handlerInput.responseBuilder.getResponse();
+        return handlerInput.responseBuilder
+            .speak("bye")
+            .withShouldEndSession(true)
+            .getResponse();
     },
 };
 
@@ -475,7 +492,7 @@ const ErrorHandler = {
         return handlerInput.responseBuilder
             .speak( speechText )
             .reprompt( speechText )
-            .getResponse( );
+            .getResponse();
     }
 };
 
@@ -541,11 +558,12 @@ exports.handler = askSDK.SkillBuilders
                             OrderTrackerIntentHandler,
                             ExitSkillIntentHandler,
                             SessionEndedRequestHandler,
-                            FallbackIntentHandler )
+                            FallbackIntentHandler,
+                            NoIntentHandler)
                         .addRequestInterceptors( PersistenceRequestInterceptor )
                         .addResponseInterceptors( PersistenceResponseInterceptor )                        
                         .withPersistenceAdapter( persistence = new s3Adapter( 
-                            { bucketName: "no-nicks-daneu" } ))
+                            { bucketName: config.GENERAL.bucketName } ))
                         .addErrorHandlers(
                             ErrorHandler )
 						.lambda( );
