@@ -10,30 +10,31 @@ const utilities = require( 'utilities' );
 **/
 
 const GENERAL = {
-    VERSION: "2.0",
-    needAmazonShippingAddress: true,
-    paymentAction 				: 'AuthorizeAndCapture', 											// Required; Authorize or AuthorizeAndCapture
-    transactionTimeout: 0,
-    platformId: undefined,
-    bucketName: ''
+    VERSION:                            '2.0',
+    needAmazonShippingAddress:          true,
+    paymentAction:                      'AuthorizeAndCapture',                      // Required; Authorize or AuthorizeAndCapture
+    transactionTimeout:                 0,
+    platformId:                         undefined,
+    bucketName:                         'no-nicks'
 };
 
 const REGIONAL = {
-    "en-US": {
-        sellerId : '',                             // Required; Amazon Pay seller ID 
-        checkoutLanguage              : 'en_US',                                                          // Optional; US must be en_US
-        countryOfEstablishment        : 'US',                                                             // Required;
-        ledgerCurrency                : 'USD',                                                            // Required;
-        sandboxMode                   : true,                                                             // Optional; Must be false for certification || production; Must be true for sandbox testing
-        sandboxCustomerEmailId        : '',                         // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
-        sellerAuthorizationNote : utilities.getSimulationString( '' ),					 			// Optional; Max 255 chars
-        softDescriptor          : '16charSoftDesc',	                                    			// Optional; Max 16 chars
-        amount                    	: '0.01',							        						// Required; Max $150,000.00 USD
-        currencyCode               	: 'USD',															// Required;
+    'en-US': {
+        sellerId:                       'AVX6ERM5QT1ZB',                            // Required; Amazon Pay seller ID 
+        checkoutLanguage:               'en_US',                                    // Optional; US must be en_US
+        countryOfEstablishment:         'US',                                       // Required;
+        ledgerCurrency:                 'USD',                                      // Required;
+        sandboxMode:                    true,                                       // Optional; Must be false for certification || production; Must be true for sandbox testing
+        sandboxCustomerEmailId:         'tcordov+pay.sandbox.buyer.2@amazon.com',   // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
+        sellerAuthorizationNote:        utilities.getSimulationString( '' ),        // Optional; Max 255 chars
+        softDescriptor:                 '16charSoftDesc',                           // Optional; Max 16 chars
+        amount:                         '0.01',                                     // Required; Max $150,000.00 USD
+        currencyCode:                   'USD',                                      // Required;
+
         // SELLER ORDER ATTRIBUTES
-        customInformation           	: 'customInformation max 1024 chars',                      		 	// Optional; Max 1024 chars
-        sellerNote                  	: 'sellerNote max 1024 chars',										// Optional; Max 1024 chars
-        sellerStoreName             	: 'No Nicks',                    			       		        	// Optional; Documentation calls this out as storeName not sellerStoreName
+        customInformation:              'customInformation max 1024 chars',         // Optional; Max 1024 chars
+        sellerNote:                     'sellerNote max 1024 chars',                // Optional; Max 1024 chars
+        sellerStoreName:                'No Nicks',                                 // Optional; Documentation calls this out as storeName not sellerStoreName
     }
 };
 
@@ -45,23 +46,22 @@ const REGIONAL = {
     https://developer.amazon.com/docs/amazon-pay/certify-skill-with-amazon-pay.html
 **/
 
+// CARD INFORMATION
+    const storeURL                         = 'www.nonicks.com';
+    const logoURL                          = 'https://s3-us-west-2.amazonaws.com/tcordov/no-nicks-logo-512.png';
 
 // LAUNCH INTENT
-    const launchRequestWelcomeTitle        = 'Welcome to '+ REGIONAL["en-US"].sellerStoreName + '. '; 
+    const launchRequestWelcomeTitle        = 'Welcome to '+ REGIONAL[ 'en-US' ].sellerStoreName +'. '; 
 	const launchRequestWelcomeResponse     = launchRequestWelcomeTitle +'We have everything you need for the perfect shave.';
 	const launchRequestQuestionResponse    = 'Are you interested in a starter kit, or refills?';
 
-// NOt willing to buy INTENT response
-    const noIntentResponse 				   = 'Okay. Do you want to order something else?'
-
-// CARD INFORMATION
-	const storeURL						   = 'www.nonicks.com';
-    const logoURL                          = 'https://s3-us-west-2.amazonaws.com/tcordov/no-nicks-logo-512.png';
+// NO INTENT
+    const noIntentResponse 				   = 'Okay. Do you want to order something else?';
 
 // CART SUMMARY
     const cartSummaryCheckout              = ' Do you want to check out now?';
     const cartSummarySubscription          = ' Every 2 months, you’ll be charged {subscriptionPrice} dollars for your refill.';
-    const cartSummaryResponse              = 'Your total for the ' + REGIONAL["en-US"].sellerStoreName + ' {productType} is {productPrice} dollars and will ship to your address at {shippingAddress}.<break time=".5s"/>';
+    const cartSummaryResponse              = 'Your total for the '+ REGIONAL[ 'en-US' ].sellerStoreName +' {productType} is {productPrice} dollars and will ship to your address at {shippingAddress}.<break time=".5s"/>';
     
 // CANCEL & REFUND CONTACT DETAILS
     const storePhoneNumber                 = '1-234-567-8910';
@@ -81,8 +81,8 @@ const REGIONAL = {
 // ORDER CONFIRMATION - Required
     const confirmationTitle                = 'Order Confirmation Details';
     const confirmationPlaceOrder           = 'Your order has been placed.';
-    const confirmationThanks               = 'Thanks for shaving with '+ REGIONAL["en-US"].sellerStoreName +'.';
-    const confirmationIntentResponse       = REGIONAL["en-US"].sellerStoreName + ' will email you when your order ships. Thanks for shaving with '+ REGIONAL["en-US"].sellerStoreName +'.';
+    const confirmationThanks               = 'Thanks for shaving with '+ REGIONAL[ 'en-US' ].sellerStoreName +'.';
+    const confirmationIntentResponse       = REGIONAL[ 'en-US' ].sellerStoreName + ' will email you when your order ships. Thanks for shaving with '+ REGIONAL[ 'en-US' ].sellerStoreName +'.';
     const confirmationItems                = 'Products: 1 {productType}';
     const confirmationTotal                = 'Total amount: ${productPrice}';
     const confirmationTracking             = 'Tracking number: 9400121699000025552416.';
@@ -97,10 +97,11 @@ const REGIONAL = {
     const orderTrackerCardResponse         = 'Your order #19206 was shipped via UPS and is estimated to arrive on Friday.\n You can check the status at any time using tracking number 9400121699000025552416.';
 
 // HELP INTENT
-    const helpCommandsIntentResponse       = 'To check order status, say "where is my order". To cancel an order, say "cancel order." To ask for a refund, say "refund."';
+    const helpCommandsIntentResponse       = 'To check order status, say where is my order. To cancel an order, say cancel order. To ask for a refund, say refund.';
 
     // Fallback INTENT
-    const fallbackHelpMessage = 'Sorry, I didn\'t get this one. ' + REGIONAL["en-US"].sellerStoreName + ' can help you with the following: ' + helpCommandsIntentResponse;
+    const fallbackHelpMessage               = 'Sorry, I didn\'t get this one. ' + REGIONAL[ 'en-US' ].sellerStoreName + ' can help you with the following: ' + helpCommandsIntentResponse;
+
 
 /** 
     The following strings are used to output errors to test the skill
