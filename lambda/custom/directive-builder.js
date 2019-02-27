@@ -28,5 +28,7 @@ function createChargeDirective(payload, token) {
 
 module.exports = {
     'createSetupDirective': createSetupDirective,
-    'createChargeDirective': createChargeDirective
+    'createChargeDirective': createChargeDirective,
+    'setupDirectiveName' : setupDirective.name,
+    'chargeDirectiveName' : chargeDirective.name,
 };

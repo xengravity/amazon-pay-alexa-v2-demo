@@ -140,7 +140,7 @@ function AmazonPayCharge ( handlerInput ) {
         .withAskForPermissionsConsentCard( [ config.scope ] )
         .getResponse();
     }
-    
+
     // Get session attributes
     const { attributesManager } = handlerInput;
     let attributes  = attributesManager.getSessionAttributes( );
@@ -265,15 +265,61 @@ const YesIntentHandler = {
     }
 };
 
-
-// You requested the Setup or Charge directive and are now receiving the Connections.Response
-const ConnectionsResponseHandler = {
+// You requested the Setup directive and are now receiving the Connections.Response
+const SetupConnectionsResponseHandler = {
     canHandle( handlerInput ) {
-        return handlerInput.requestEnvelope.request.type === 'Connections.Response';
+        return handlerInput.requestEnvelope.request.type === 'Connections.Response' &&
+        handlerInput.requestEnvelope.request.name === directiveBuilder.setupDirectiveName;
     },
     handle( handlerInput ) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
-        const connectionName                  	    = handlerInput.requestEnvelope.request.name;
+        const connectionResponsePayload       	    = handlerInput.requestEnvelope.request.payload;
+        const connectionResponseStatusCode    	    = handlerInput.requestEnvelope.request.status.code;
+
+        // If there are integration or runtime errors, do not charge the payment method
+        if ( connectionResponseStatusCode != 200 ) {
+            return error.handleErrors( handlerInput );
+        }
+
+        // Get the billingAgreementId and billingAgreementStatus from the Setup Connections.Response
+        const billingAgreementId 			= connectionResponsePayload.billingAgreementDetails.billingAgreementId;
+        const billingAgreementStatus 		= connectionResponsePayload.billingAgreementDetails.billingAgreementStatus;              
+
+         // If billingAgreementStatus is valid, Charge the payment method    
+        if ( billingAgreementStatus === 'OPEN' ) {
+
+            // Save billingAgreementId attributes because directives will close the session
+            const { attributesManager }     = handlerInput;
+            let attributes                  = attributesManager.getSessionAttributes( );
+            attributes.billingAgreementId   = billingAgreementId;
+            attributes.setup                = true;
+            attributesManager.setSessionAttributes( attributes );                      
+
+            const shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
+            let productType                 = attributes.productType;
+            let cartSummaryResponse         = GetResponse( 'summary', config.cartSummaryResponse, productType, shippingAddress );
+
+            return handlerInput.responseBuilder
+                .speak( cartSummaryResponse )
+                .withShouldEndSession( false )
+                .getResponse( );                    
+
+        // If billingAgreementStatus is not valid, do not Charge the payment method	
+        } else {
+            return error.handleBillingAgreementState( billingAgreementStatus, handlerInput );
+        }
+
+    }
+};
+
+// You requested the Charge directive and are now receiving the Connections.Response
+const ChargeConnectionsResponseHandler = {
+    canHandle( handlerInput ) {
+        return handlerInput.requestEnvelope.request.type === 'Connections.Response' &&
+        handlerInput.requestEnvelope.request.name === directiveBuilder.chargeDirectiveName;
+    },
+    handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         const connectionResponsePayload       	    = handlerInput.requestEnvelope.request.payload;
         const connectionResponseStatusCode    	    = handlerInput.requestEnvelope.request.status.code;
 
@@ -281,64 +327,29 @@ const ConnectionsResponseHandler = {
         if ( connectionResponseStatusCode != 200 ) {
             return error.handleErrors( handlerInput );
 
+        } 
+        const authorizationStatusState = connectionResponsePayload.authorizationDetails.state;
+        
+        // Authorization is declined, tell the customer their order was not placed
+        if( authorizationStatusState === 'Declined' ) {
+            const authorizationStatusReasonCode = connectionResponsePayload.authorizationDetails.reasonCode;
+
+            return error.handleAuthorizationDeclines( authorizationStatusReasonCode, handlerInput );
+
+        // CERTIFICATION REQUIREMENT 
+        // Authorization is approved, tell the customer their order was placed and send them a card with order details  
         } else {
-	        // Receiving Setup Connections.Response
-	        if ( connectionName === "Setup" ) {
+            // Get the productType attribute
+            const { attributesManager }     = handlerInput;
+            let attributes                  = attributesManager.getSessionAttributes( );             
+            const productType               = attributes.productType;
+            let confirmationCardResponse    = GetResponse( 'confirmation', config.confirmationCardResponse, productType, null );
 
-	            // Get the billingAgreementId and billingAgreementStatus from the Setup Connections.Response
-	            const billingAgreementId 			= connectionResponsePayload.billingAgreementDetails.billingAgreementId;
-				const billingAgreementStatus 		= connectionResponsePayload.billingAgreementDetails.billingAgreementStatus;              
-
-				 // If billingAgreementStatus is valid, Charge the payment method    
-				if ( billingAgreementStatus === 'OPEN' ) {
-
-                    // Save billingAgreementId attributes because directives will close the session
-                    const { attributesManager }     = handlerInput;
-                    let attributes                  = attributesManager.getSessionAttributes( );
-                    attributes.billingAgreementId   = billingAgreementId;
-                    attributes.setup                = true;
-                    attributesManager.setSessionAttributes( attributes );                      
-
-                    const shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
-                    let productType                 = attributes.productType;
-                    let cartSummaryResponse         = GetResponse( 'summary', config.cartSummaryResponse, productType, shippingAddress );
-
-                    return handlerInput.responseBuilder
-                        .speak( cartSummaryResponse )
-                        .withShouldEndSession( false )
-                        .getResponse( );                    
-
-	            // If billingAgreementStatus is not valid, do not Charge the payment method	
-				} else {
-					return error.handleBillingAgreementState( billingAgreementStatus, handlerInput );
-				}
-
-	        // Receiving Charge Connections.Response
-	        } else if ( connectionName === "Charge" ) {
-            	const authorizationStatusState = connectionResponsePayload.authorizationDetails.state;
-            	
-                // Authorization is declined, tell the customer their order was not placed
-            	if( authorizationStatusState === 'Declined' ) {
-            		const authorizationStatusReasonCode = connectionResponsePayload.authorizationDetails.reasonCode;
-
-            		return error.handleAuthorizationDeclines( authorizationStatusReasonCode, handlerInput );
-
-                // CERTIFICATION REQUIREMENT 
-                // Authorization is approved, tell the customer their order was placed and send them a card with order details  
-            	} else {
-                    // Get the productType attribute
-                    const { attributesManager }     = handlerInput;
-                    let attributes                  = attributesManager.getSessionAttributes( );             
-                    const productType               = attributes.productType;
-                    let confirmationCardResponse    = GetResponse( 'confirmation', config.confirmationCardResponse, productType, null );
-
-		            return handlerInput.responseBuilder
-						            	.speak( config.confirmationIntentResponse )
-                                        .withStandardCard( config.confirmationTitle, confirmationCardResponse, config.logoURL )
-						            	.withShouldEndSession( true )
-						            	.getResponse( );
-            	}
-	        }
+            return handlerInput.responseBuilder
+                                .speak( config.confirmationIntentResponse )
+                                .withStandardCard( config.confirmationTitle, confirmationCardResponse, config.logoURL )
+                                .withShouldEndSession( true )
+                                .getResponse( );
         }
     }
 };
@@ -522,7 +533,8 @@ exports.handler = askSDK.SkillBuilders
                             InProgressStarterKitIntent,
                             CompletedRefillIntentHandler,
                             YesIntentHandler, 
-							ConnectionsResponseHandler,
+                            ChargeConnectionsResponseHandler,
+                            SetupConnectionsResponseHandler,
                             RefundOrderIntentHandler,
                             CancelOrderIntentHandler,
                             HelpIntentHandler,
