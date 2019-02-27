@@ -15,7 +15,7 @@ const GENERAL = {
     paymentAction 				: 'AuthorizeAndCapture', 											// Required; Authorize or AuthorizeAndCapture
     transactionTimeout: 0,
     platformId: undefined,
-    bucketName: ""
+    bucketName: ''
 };
 
 const REGIONAL = {

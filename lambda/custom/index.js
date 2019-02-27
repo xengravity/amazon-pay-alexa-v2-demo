@@ -22,6 +22,12 @@ const utilities     = require( 'utilities' );
 const s3Adapter     = require( 'ask-sdk-s3-persistence-adapter' ).S3PersistenceAdapter;
 let persistence     = '';
 
+const products = Object.freeze({
+    KIT: "kit",
+    UPGRADE: "upgrade",
+    REFILL: "refill"
+});
+
 // Welcome, are you interested in a starter kit or a refill subscription?
 const LaunchRequestHandler = {
     canHandle( handlerInput ) {
@@ -29,12 +35,6 @@ const LaunchRequestHandler = {
     },
     handle( handlerInput ) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
-        // TODO: Remove workaround to reset setup status
-        const { attributesManager }     = handlerInput;
-        let attributes                  = attributesManager.getSessionAttributes( );
-        attributes.setup                = false;
-        attributesManager.setSessionAttributes( attributes );         
-   
         return handlerInput.responseBuilder
 				            .speak( config.launchRequestWelcomeResponse + ' ' + config.launchRequestQuestionResponse )
                             .withStandardCard( config.launchRequestWelcomeTitle, config.storeURL, config.logoURL )
@@ -80,12 +80,12 @@ const InProgressStarterKitIntent = {
 
                     // No, I do not want to upgrade, just buy the starter kit
                     if ( currentSlot.name === 'UpgradeKitIntentSlot' && currentSlotValue === 'no' ) {
-                        return AmazonPaySetup( handlerInput, 'kit' );
+                        return AmazonPaySetup( handlerInput, products.KIT );
                     }
 
                     // Yes, I do want to upgrade the starter kit
                     if ( currentSlot.name === 'UpgradeKitIntentSlot' && currentSlotValue === 'yes' ) {
-                        return AmazonPaySetup( handlerInput, 'upgrade' );                  
+                        return AmazonPaySetup( handlerInput, products.UPGRADE );                  
                     }
 
                     // TODO: Pull refill subscription logic here                                 
@@ -176,23 +176,23 @@ function GetResponse ( stage, template, productType, shippingAddress ) {
     let cartSummarySubscription     = config.cartSummarySubscription;
     let confirmationCardResponse    = template;
     let confirmationItem            = '';      
-
+    console.log(productType + ' vs ' + products.KIT);
     switch ( productType ) {
-        case 'kit':
+        case products.KIT:
             productType             = 'Starter Kit';
             confirmationItem        = 'Starter Kit';
             productPrice            = 9;
             cartSummarySubscription = '';
             break;
 
-        case 'refill':
+        case products.REFILL:
             confirmationItem        = 'Refill Subscription';   
             productPrice            = 20;
             subscriptionPrice       = 20;
             cartSummarySubscription = cartSummarySubscription.replace( '{subscriptionPrice}', subscriptionPrice );
             break;
 
-        case 'upgrade':
+        case products.UPGRADE:
             productType             = 'Starter Kit';
             confirmationItem        = 'Starter Kit + Refill Subscription';  
             productPrice            = 9;
@@ -249,7 +249,7 @@ const CompletedRefillIntentHandler = {
                 .getResponse();
         } else {
             // Yes, I want to buy the refill subscription
-            return AmazonPaySetup( handlerInput, 'refill' );  
+            return AmazonPaySetup( handlerInput, products.REFILL );  
         }
     }
 };
@@ -268,7 +268,7 @@ const YesIntentHandler = {
         const setupHappened             = attributes.setup;
 
         if(attributes.reengage){
-            attributes.reengage                = false;
+            attributes.reengage = false;
             attributesManager.setSessionAttributes( attributes );
             return handlerInput.responseBuilder
                 .speak(config.launchRequestQuestionResponse)
@@ -278,6 +278,9 @@ const YesIntentHandler = {
         }
         // Did setup already happen?
         if ( setupHappened ) {
+            // cleanup
+            attributes.setup = false;
+            attributesManager.setSessionAttributes( attributes );
             return AmazonPayCharge( handlerInput );    
         } else {
              return handlerInput.responseBuilder
@@ -309,6 +312,18 @@ const NoIntentHandler = {
             // exit
             return ExitSkillIntentHandler.handle(handlerInput);
         }  
+        if(attributes.setup){
+            // customer decided to not checkout, while having filled the cart already
+            attributes.reengage                = true;
+            // todo: should setup akso be set to false?
+            // todo: maybe replace setup, reengage,  ... with "STATES" of a state machine?
+            attributesManager.setSessionAttributes( attributes );  
+
+            return handlerInput.responseBuilder
+                .speak( config.noIntentResponse )
+                .withShouldEndSession( false )
+                .getResponse( );
+        }
         // catching unexpected no's
         return FallbackIntentHandler.handle(handlerInput);
     }
@@ -342,6 +357,7 @@ const SetupConnectionsResponseHandler = {
             let attributes                  = attributesManager.getSessionAttributes( );
             attributes.billingAgreementId   = billingAgreementId;
             attributes.setup                = true;
+            console.log(`Attributes after setup: ${JSON.stringify(attributes)}`);
             attributesManager.setSessionAttributes( attributes );                      
 
             const shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
@@ -507,6 +523,9 @@ const SessionEndedRequestHandler = {
     handle(handlerInput) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         console.log(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`)
+
+        // TODO: possibly a good spot to cleanup session state. Caution, only on unexpected reasons, not always, otherwise we cannot make use of picking up a session again
+
         return handlerInput.responseBuilder
             .speak("bye")
             .withShouldEndSession(true)
