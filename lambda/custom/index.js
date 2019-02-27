@@ -5,9 +5,8 @@
     TODO: 
             + Pull refill subscription logic to starter kit dialog
             + Clean up hard coded strings in connections
-            + Can you move from directive to intent w/o user invocation?
+            + Is it possible to move from directive to intent w/o user invocation?
             + Add dynamic username in config for 'Drew'
-            + Debug exit skill
             + Clean up YesIntent logic for checkout
             + Remove all console logs
 **/
@@ -594,7 +593,7 @@ const PersistenceResponseInterceptor = {
 
             sessionAttributes.lastUseTimestamp = new Date( handlerInput.requestEnvelope.request.timestamp ).getTime( );
             handlerInput.attributesManager.setPersistentAttributes( sessionAttributes );
-            
+
             return new Promise( ( resolve, reject ) => {
                 handlerInput.attributesManager.savePersistentAttributes( )
                                                 .then( ( ) => {

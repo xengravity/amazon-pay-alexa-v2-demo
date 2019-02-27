@@ -100,7 +100,7 @@ const REGIONAL = {
     const helpCommandsIntentResponse       = 'To check order status, say where is my order. To cancel an order, say cancel order. To ask for a refund, say refund.';
 
     // Fallback INTENT
-    const fallbackHelpMessage               = 'Sorry, I didn\'t get this one. ' + REGIONAL[ 'en-US' ].sellerStoreName + ' can help you with the following: ' + helpCommandsIntentResponse;
+    const fallbackHelpMessage               = 'Hmm, I\'m not sure about that. ' + helpCommandsIntentResponse;
 
 
 /** 

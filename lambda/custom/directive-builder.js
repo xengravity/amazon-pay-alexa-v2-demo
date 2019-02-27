@@ -2,11 +2,11 @@
 
 const directiveType = 'Connections.SendRequest';
 const setupDirective = {
-    name: "Setup",
+    name: 'Setup',
 };
 
 const chargeDirective = {
-    name: "Charge",
+    name: 'Charge',
 };
 
 function createDirective(name, payload, token) {
