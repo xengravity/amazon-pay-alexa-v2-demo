@@ -103,6 +103,14 @@ const InProgressStarterKitIntent = {
 
 // Consumer has shown intent to purchase, call Setup to grab the consumers shipping address details
 function AmazonPaySetup ( handlerInput, productType ) {
+
+    // Save session attributes because directives will close the session
+    const { attributesManager } = handlerInput;
+    let attributes              = attributesManager.getSessionAttributes( );
+
+    attributes.productType      = productType;
+    attributesManager.setSessionAttributes( attributes );
+    
     // permission check
     const permissions = utilities.getPermissions(handlerInput);
     const amazonPayPermission = permissions.scopes['payments:autopay_consent'];
@@ -112,13 +120,6 @@ function AmazonPaySetup ( handlerInput, productType ) {
         .withAskForPermissionsConsentCard( [ config.scope ] )
         .getResponse();
     }
-
-    // Save session attributes because directives will close the session
-    const { attributesManager } = handlerInput;
-    let attributes              = attributesManager.getSessionAttributes( );
-
-    attributes.productType      = productType;
-    attributesManager.setSessionAttributes( attributes );
 
     // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
     const token                     = utilities.generateRandomString( 12 );
@@ -477,7 +478,7 @@ const OrderTrackerIntentHandler = {
         return handlerInput.responseBuilder
                             .speak( config.orderTrackerIntentResponse )
                             .withStandardCard( config.orderTrackerTitle, config.orderTrackerCardResponse, config.logoURL )
-                            .withShouldEndSession( false )
+                            .withShouldEndSession( true )
                             .getResponse( );
     }
 };
