@@ -34,7 +34,7 @@ var setupPayload = function (language) {
                 '@version': '2',
                 //'sellerBillingAgreementId': SOME RANDOM STRING,
                 'storeName': generalConfig.sellerStoreName,
-                'customInformation': generalConfig.customInformation
+                'customInformation': regionalConfig.customInformation
             }
         }
     };
@@ -71,7 +71,7 @@ var chargePayload = function (billingAgreementId, authorizationReferenceId, sell
             '@version': '2',
  //           'sellerOrderId': sellerOrderId,
             'storeName': regionalConfig.sellerStoreName,
-            'customInformation': regionalConfig,customInformation,
+            'customInformation': regionalConfig.customInformation,
             'sellerNote': regionalConfig.sellerNote
         }
     };

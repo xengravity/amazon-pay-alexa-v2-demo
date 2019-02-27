@@ -98,6 +98,15 @@ const InProgressStarterKitIntent = {
 
 // Consumer has shown intent to purchase, call Setup to grab the consumers shipping address details
 function AmazonPaySetup ( handlerInput, productType ) {
+    // permission check
+    const permissions = utilities.getPermissions(handlerInput);
+    const amazonPayPermission = permissions.scopes['payments:autopay_consent'];
+    if (amazonPayPermission.status === "DENIED") {
+        return handlerInput.responseBuilder
+        .speak( config.enablePermission )
+        .withAskForPermissionsConsentCard( [ config.scope ] )
+        .getResponse();
+    }
 
     // Save session attributes because directives will close the session
     const { attributesManager } = handlerInput;
@@ -121,6 +130,17 @@ function AmazonPaySetup ( handlerInput, productType ) {
 
 // Consumer has requested checkout and wants to be charged
 function AmazonPayCharge ( handlerInput ) {
+
+    // permission check
+    const permissions = utilities.getPermissions(handlerInput);
+    const amazonPayPermission = permissions.scopes['payments:autopay_consent'];
+    if (amazonPayPermission.status === "DENIED") {
+        return handlerInput.responseBuilder
+        .speak( config.enablePermission )
+        .withAskForPermissionsConsentCard( [ config.scope ] )
+        .getResponse();
+    }
+    
     // Get session attributes
     const { attributesManager } = handlerInput;
     let attributes  = attributesManager.getSessionAttributes( );

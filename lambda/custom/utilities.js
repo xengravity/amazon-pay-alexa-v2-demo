@@ -42,10 +42,10 @@ function generateRandomString( length ) {
     return randomString;
 }
 
-function getConsentToken( handlerInput ) {
-	const consentToken = handlerInput.requestEnvelope.context.System.apiAccessToken;
+function getPermissions(handlerInput) {
+	const permissions = handlerInput.requestEnvelope.context.System.user.permissions;
 
-	return consentToken;
+	return permissions;
 }
 
 // Get intent slot values
@@ -94,8 +94,8 @@ function getSlotValues( filledSlots ) {
 
 module.exports = {
     'generateRandomString': generateRandomString,
-    'getSimulationString': 	getSimulationString,
-    'getConsentToken': 		getConsentToken,
-    'getSlotValues': 		getSlotValues
+    'getSimulationString': getSimulationString,
+	'getSlotValues': getSlotValues,
+	'getPermissions': getPermissions
 };
 
