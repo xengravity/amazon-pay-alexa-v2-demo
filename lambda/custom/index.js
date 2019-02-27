@@ -9,24 +9,24 @@
             + Add dynamic username in config for 'Drew'
             + Debug exit skill
             + Clean up YesIntent logic for checkout
+            + Remove all console logs
 **/
 
 'use strict';
 
-const askSDK        = require( 'ask-sdk-core' );
-const config        = require( 'config' );
-const directiveBuilder = require('directive-builder');
-const payloadBuilder = require('payload-builder');
-const error         = require( 'error-handler' );
-const utilities     = require( 'utilities' );
-const s3Adapter     = require( 'ask-sdk-s3-persistence-adapter' ).S3PersistenceAdapter;
-let persistence     = '';
-
-const products = Object.freeze({
-    KIT: "kit",
-    UPGRADE: "upgrade",
-    REFILL: "refill"
-});
+const askSDK            = require( 'ask-sdk-core' );
+const config            = require( 'config' );
+const directiveBuilder  = require('directive-builder');
+const payloadBuilder    = require('payload-builder');
+const error             = require( 'error-handler' );
+const utilities         = require( 'utilities' );
+const s3Adapter         = require( 'ask-sdk-s3-persistence-adapter' ).S3PersistenceAdapter;
+let persistence         = '';
+const products          = Object.freeze( {
+                                KIT:     'kit',
+                                UPGRADE: 'upgrade',
+                                REFILL:  'refill'
+                            } );
 
 // Welcome, are you interested in a starter kit or a refill subscription?
 const LaunchRequestHandler = {
@@ -36,7 +36,7 @@ const LaunchRequestHandler = {
     handle( handlerInput ) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         return handlerInput.responseBuilder
-				            .speak( config.launchRequestWelcomeResponse + ' ' + config.launchRequestQuestionResponse )
+                            .speak( config.launchRequestWelcomeResponse + ' ' + config.launchRequestQuestionResponse )
                             .withStandardCard( config.launchRequestWelcomeTitle, config.storeURL, config.logoURL )
 				            .reprompt( config.launchRequestQuestionResponse )
                             .withShouldEndSession( false )
@@ -49,12 +49,12 @@ const InProgressStarterKitIntent = {
     canHandle( handlerInput ) {
         const request = handlerInput.requestEnvelope.request;
 
-        return request.type === 'IntentRequest' &&
-               request.intent.name === 'StarterKitIntent' &&
-               request.dialogState !== 'COMPLETED';
+        return request.type         === 'IntentRequest' &&
+               request.intent.name  === 'StarterKitIntent' &&
+               request.dialogState  !== 'COMPLETED';
     },
     handle( handlerInput ) {
-        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
+        console.log(`Intent input: ${ JSON.stringify( handlerInput ) }`);
         const currentIntent = handlerInput.requestEnvelope.request.intent;
 
         for ( const slotName of Object.keys( handlerInput.requestEnvelope.request.intent.slots ) ) {
@@ -69,7 +69,8 @@ const InProgressStarterKitIntent = {
                         // re-engage for different product
                         const { attributesManager }     = handlerInput;
                         let attributes                  = attributesManager.getSessionAttributes( );
-                        attributes.reengage                = true;
+
+                        attributes.reengage             = true;
                         attributesManager.setSessionAttributes( attributes );  
 
                         return handlerInput.responseBuilder
@@ -96,8 +97,8 @@ const InProgressStarterKitIntent = {
         }
 
         return handlerInput.responseBuilder
-            .addDelegateDirective( currentIntent )
-            .getResponse( );
+                            .addDelegateDirective( currentIntent )
+                            .getResponse( );
     }
 };
 
@@ -105,20 +106,21 @@ const InProgressStarterKitIntent = {
 function AmazonPaySetup ( handlerInput, productType ) {
 
     // Save session attributes because directives will close the session
-    const { attributesManager } = handlerInput;
-    let attributes              = attributesManager.getSessionAttributes( );
+    const { attributesManager }     = handlerInput;
+    let attributes                  = attributesManager.getSessionAttributes( );
 
-    attributes.productType      = productType;
+    attributes.productType          = productType;
     attributesManager.setSessionAttributes( attributes );
     
-    // permission check
-    const permissions = utilities.getPermissions(handlerInput);
-    const amazonPayPermission = permissions.scopes['payments:autopay_consent'];
-    if (amazonPayPermission.status === "DENIED") {
+    // Permission check
+    const permissions               = utilities.getPermissions( handlerInput );
+    const amazonPayPermission       = permissions.scopes[ config.scope ];
+
+    if ( amazonPayPermission.status === 'DENIED' ) {
         return handlerInput.responseBuilder
-        .speak( config.enablePermission )
-        .withAskForPermissionsConsentCard( [ config.scope ] )
-        .getResponse();
+                            .speak( config.enablePermission )
+                            .withAskForPermissionsConsentCard( [ config.scope ] )
+                            .getResponse();
     }
 
     // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
@@ -137,27 +139,29 @@ function AmazonPaySetup ( handlerInput, productType ) {
 // Consumer has requested checkout and wants to be charged
 function AmazonPayCharge ( handlerInput ) {
 
-    // permission check
+    // Permission check
     const permissions = utilities.getPermissions(handlerInput);
-    const amazonPayPermission = permissions.scopes['payments:autopay_consent'];
-    if (amazonPayPermission.status === "DENIED") {
+
+    const amazonPayPermission = permissions.scopes[ config.scope ];
+
+    if (amazonPayPermission.status === 'DENIED') {
         return handlerInput.responseBuilder
-        .speak( config.enablePermission )
-        .withAskForPermissionsConsentCard( [ config.scope ] )
-        .getResponse();
+                            .speak( config.enablePermission )
+                            .withAskForPermissionsConsentCard( [ config.scope ] )
+                            .getResponse();
     }
 
     // Get session attributes
-    const { attributesManager } = handlerInput;
-    let attributes  = attributesManager.getSessionAttributes( );
-    const billingAgreementId = attributes.billingAgreementId;
-    const authorizationReferenceId = utilities.generateRandomString(16);
-    const sellerOrderId = utilities.generateRandomString(6);
-    const locale = handlerInput.requestEnvelope.request.locale;
-    const token = utilities.generateRandomString( 12 );    
-    const amount = config.REGIONAL[locale].amount;
-    // Set the Charge payload and send the request directive
+    const { attributesManager }     = handlerInput;
+    let attributes                  = attributesManager.getSessionAttributes( );
+    const billingAgreementId        = attributes.billingAgreementId;
+    const authorizationReferenceId  = utilities.generateRandomString(16);
+    const sellerOrderId             = utilities.generateRandomString(6);
+    const locale                    = handlerInput.requestEnvelope.request.locale;
+    const token                     = utilities.generateRandomString( 12 );    
+    const amount                    = config.REGIONAL[locale].amount;
     
+    // Set the Charge payload and send the request directive
     const chargePayload             = payloadBuilder.chargePayload(billingAgreementId, authorizationReferenceId, sellerOrderId, amount, locale);
     const chargeRequestDirective    = directiveBuilder.createChargeDirective(chargePayload, token);
 
@@ -176,7 +180,9 @@ function GetResponse ( stage, template, productType, shippingAddress ) {
     let cartSummarySubscription     = config.cartSummarySubscription;
     let confirmationCardResponse    = template;
     let confirmationItem            = '';      
+
     console.log(productType + ' vs ' + products.KIT);
+
     switch ( productType ) {
         case products.KIT:
             productType             = 'Starter Kit';
@@ -239,14 +245,15 @@ const CompletedRefillIntentHandler = {
             // try to re-engage the customer for different products
             const { attributesManager }     = handlerInput;
             let attributes                  = attributesManager.getSessionAttributes( );
-            attributes.reengage                = true;
+
+            attributes.reengage             = true;
             attributesManager.setSessionAttributes( attributes );  
             
+            // I don't want to buy anything, exit the skill
             return handlerInput.responseBuilder
-                // I don't want to buy anything, exit the skill
-                .speak( config.noIntentResponse )
-                .withShouldEndSession( false )
-                .getResponse();
+                                .speak( config.noIntentResponse )
+                                .withShouldEndSession( false )
+                                .getResponse();
         } else {
             // Yes, I want to buy the refill subscription
             return AmazonPaySetup( handlerInput, products.REFILL );  
@@ -306,7 +313,7 @@ const NoIntentHandler = {
         
         if(attributes.reengage){
             // cleanup
-            attributes.reengage                = false;
+            attributes.reengage         = false;
             attributesManager.setSessionAttributes( attributes );
             console.log(`Attributes: ${JSON.stringify(attributes)}`);   
             // exit
@@ -314,9 +321,9 @@ const NoIntentHandler = {
         }  
         if(attributes.setup){
             // customer decided to not checkout, while having filled the cart already
-            attributes.reengage                = true;
+            attributes.reengage         = true;
             // todo: should setup akso be set to false?
-            // todo: maybe replace setup, reengage,  ... with "STATES" of a state machine?
+            // todo: maybe replace setup, reengage,  ... with 'STATES' of a state machine?
             attributesManager.setSessionAttributes( attributes );  
 
             return handlerInput.responseBuilder
@@ -355,10 +362,11 @@ const SetupConnectionsResponseHandler = {
             // Save billingAgreementId attributes because directives will close the session
             const { attributesManager }     = handlerInput;
             let attributes                  = attributesManager.getSessionAttributes( );
+
             attributes.billingAgreementId   = billingAgreementId;
             attributes.setup                = true;
-            console.log(`Attributes after setup: ${JSON.stringify(attributes)}`);
             attributesManager.setSessionAttributes( attributes );                      
+            console.log(`Attributes after setup: ${JSON.stringify(attributes)}`);
 
             const shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
             let productType                 = attributes.productType;
@@ -373,7 +381,6 @@ const SetupConnectionsResponseHandler = {
         } else {
             return error.handleBillingAgreementState( billingAgreementStatus, handlerInput );
         }
-
     }
 };
 
@@ -381,18 +388,18 @@ const SetupConnectionsResponseHandler = {
 const ChargeConnectionsResponseHandler = {
     canHandle( handlerInput ) {
         return handlerInput.requestEnvelope.request.type === 'Connections.Response' &&
-        handlerInput.requestEnvelope.request.name === directiveBuilder.chargeDirectiveName;
+                handlerInput.requestEnvelope.request.name === directiveBuilder.chargeDirectiveName;
     },
     handle( handlerInput ) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
-        const connectionResponsePayload       	    = handlerInput.requestEnvelope.request.payload;
-        const connectionResponseStatusCode    	    = handlerInput.requestEnvelope.request.status.code;
+        const connectionResponsePayload     = handlerInput.requestEnvelope.request.payload;
+        const connectionResponseStatusCode  = handlerInput.requestEnvelope.request.status.code;
 
     	// If there are integration or runtime errors, do not charge the payment method
         if ( connectionResponseStatusCode != 200 ) {
             return error.handleErrors( handlerInput );
-
         } 
+
         const authorizationStatusState = connectionResponsePayload.authorizationDetails.state;
         
         // Authorization is declined, tell the customer their order was not placed
@@ -429,10 +436,10 @@ const RefundOrderIntentHandler = {
     handle( handlerInput ) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         return handlerInput.responseBuilder
-            .speak( config.refundOrderIntentResponse )
-            .withStandardCard( config.refundOrderTitle, config.refundOrderCardResponse, config.logoURL )
-            .withShouldEndSession( true )
-            .getResponse( );
+                            .speak( config.refundOrderIntentResponse )
+                            .withStandardCard( config.refundOrderTitle, config.refundOrderCardResponse, config.logoURL )
+                            .withShouldEndSession( true )
+                            .getResponse( );
     }
 };
 
@@ -446,10 +453,10 @@ const CancelOrderIntentHandler = {
     handle( handlerInput ) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         return handlerInput.responseBuilder
-            .speak( config.cancelOrderIntentResponse )
-            .withStandardCard( config.cancelOrderTitle, config.cancelOrderCardResponse, config.logoURL )
-            .withShouldEndSession( true )
-            .getResponse( );
+                            .speak( config.cancelOrderIntentResponse )
+                            .withStandardCard( config.cancelOrderTitle, config.cancelOrderCardResponse, config.logoURL )
+                            .withShouldEndSession( true )
+                            .getResponse( );
     }
 };
 
@@ -509,7 +516,7 @@ const ExitSkillIntentHandler = {
     handle( handlerInput ) {
         console.log(`Exiting skill: ${JSON.stringify(handlerInput)}`);
         return handlerInput.responseBuilder
-                            // TODO: Get official response
+                            // TODO: Get official response from UX
                             .speak( 'see ya later!' )
                             .withShouldEndSession( true )
                             .getResponse( );
@@ -527,7 +534,7 @@ const SessionEndedRequestHandler = {
         // TODO: possibly a good spot to cleanup session state. Caution, only on unexpected reasons, not always, otherwise we cannot make use of picking up a session again
 
         return handlerInput.responseBuilder
-            .speak("bye")
+            .speak('bye')
             .withShouldEndSession(true)
             .getResponse();
     },
@@ -558,17 +565,18 @@ const PersistenceRequestInterceptor = {
         if ( handlerInput.requestEnvelope.session[ 'new' ] ) {
             return new Promise( ( resolve, reject ) => {
                 handlerInput.attributesManager.getPersistentAttributes( )
-                    .then( ( persistentAttributes ) => {
-                        persistentAttributes = persistentAttributes || {};
-                        if ( !persistentAttributes[ 'launchCount' ] )
-                            persistentAttributes[ 'launchCount' ] = 0;
-                        persistentAttributes[ 'launchCount' ] += 1;
-                        handlerInput.attributesManager.setSessionAttributes( persistentAttributes );
-                        resolve( );
-                    } )
-                    .catch( ( err ) => {
-                        reject( err );
-                    } );
+                            .then( ( persistentAttributes ) => {
+                                persistentAttributes = persistentAttributes || {};
+
+                                if ( !persistentAttributes.launchCount )
+                                    persistentAttributes.launchCount = 0;
+                                    persistentAttributes.launchCount += 1;
+                                    handlerInput.attributesManager.setSessionAttributes( persistentAttributes );
+                                    resolve( );
+                                } )
+                            .catch( ( err ) => {
+                                reject( err );
+                            } );
             } );
         } // end session['new'] 
     }
@@ -579,19 +587,22 @@ const PersistenceRequestInterceptor = {
 // original code @ https://gist.github.com/germanviscuso/70c979f671660fea811ccfb63801f936
 const PersistenceResponseInterceptor = {
     process( handlerInput, responseOutput ) {
-        const ses = ( typeof responseOutput.shouldEndSession === "undefined" ? true : responseOutput.shouldEndSession );
+        const ses = ( typeof responseOutput.shouldEndSession === 'undefined' ? true : responseOutput.shouldEndSession );
+
         if ( ses || handlerInput.requestEnvelope.request.type === 'SessionEndedRequest' ) { // skill was stopped or timed out 
             let sessionAttributes = handlerInput.attributesManager.getSessionAttributes( );
-            sessionAttributes[ 'lastUseTimestamp' ] = new Date( handlerInput.requestEnvelope.request.timestamp ).getTime( );
+
+            sessionAttributes.lastUseTimestamp = new Date( handlerInput.requestEnvelope.request.timestamp ).getTime( );
             handlerInput.attributesManager.setPersistentAttributes( sessionAttributes );
+            
             return new Promise( ( resolve, reject ) => {
                 handlerInput.attributesManager.savePersistentAttributes( )
-                    .then( ( ) => {
-                        resolve( );
-                    } )
-                    .catch( ( err ) => {
-                        reject( err );
-                    } );
+                                                .then( ( ) => {
+                                                    resolve( );
+                                                } )
+                                                .catch( ( err ) => {
+                                                    reject( err );
+                                                } );
             } );
         }
     }

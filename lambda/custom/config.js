@@ -10,12 +10,12 @@ const utilities = require( 'utilities' );
 **/
 
 const GENERAL = {
-    VERSION:                            '2.0',
-    needAmazonShippingAddress:          true,
+    VERSION:                            '2.0',                                      // Required; 
+    needAmazonShippingAddress:          true,                                       // Optional; Must be boolean
     paymentAction:                      'AuthorizeAndCapture',                      // Required; Authorize or AuthorizeAndCapture
-    transactionTimeout:                 0,
-    platformId:                         undefined,
-    bucketName:                         'no-nicks'
+    transactionTimeout:                 0,                                          // Optional; The default value for Alexa transactions is 0
+    platformId:                         undefined,                                  // Optional; Used for Solution Providers
+    bucketName:                         'no-nicks'                                  // Required; Used for S3 state management
 };
 
 const REGIONAL = {
@@ -68,17 +68,17 @@ const REGIONAL = {
     const storeEmail                       = 'help@nonicks.com';
     const storeEmailPhonetic               = 'help at no nicks dot com';
 
-// REFUND INTENT - Required
+// REFUND INTENT - REQUIRED
     const refundOrderTitle                 = 'Refund Order Details';
     const refundOrderIntentResponse        = 'To request a refund, email '+ storeEmailPhonetic +', or call us. I sent contact information to your Alexa app.';
     const refundOrderCardResponse          = 'Not completely happy with your order? We are here to help.\n To request a refund, contact us at '+ storePhoneNumber +' or email '+ storeEmail +'.';
 
-// CANCEL INTENT - Required    
+// CANCEL INTENT - REQUIRED    
     const cancelOrderTitle                 = 'Cancel Order Details';
     const cancelOrderIntentResponse        = 'To request a cancellation, email '+ storeEmailPhonetic +', or call us. I sent contact information to your Alexa app.';
     const cancelOrderCardResponse          = 'Want to change or cancel your order? We are here to help.\n Contact us at '+ storePhoneNumber +' or email '+ storeEmail +'.';
     
-// ORDER CONFIRMATION - Required
+// ORDER CONFIRMATION - REQUIRED
     const confirmationTitle                = 'Order Confirmation Details';
     const confirmationPlaceOrder           = 'Your order has been placed.';
     const confirmationThanks               = 'Thanks for shaving with '+ REGIONAL[ 'en-US' ].sellerStoreName +'.';
@@ -110,16 +110,16 @@ const REGIONAL = {
 
 // ERROR RESPONSE STRINGS
     const scope                            = 'payments:autopay_consent';                                        // Required; Used request permissions for Amazon Pay
-	const enablePermission 				   = 'To make purchases in this skill, you need to enable Amazon Pay and turn on voice purchasing. To help, I sent a card to your Alexa app.'; 	    // Optional; Used for demo only
-	const errorMessage 					   = 'Merchant error occurred. '; 										// Optional; Used for demo only
+	const enablePermission 				   = 'To make purchases in this skill, you need to enable Amazon Pay and turn on voice purchasing. To help, I sent a card to your Alexa app.';
+	const errorMessage 					   = 'Merchant error occurred. ';
 	const errorUnknown 					   = 'Unknown error occurred. ';
-	const errorStatusCode 				   = 'Status code: '; 													// Optional; Used for demo only
-	const errorStatusMessage 			   = ' Status message: '; 												// Optional; Used for demo only
-	const errorPayloadMessage 			   = ' Payload message: '; 											    // Optional; Used for demo only
+	const errorStatusCode 				   = 'Status code: ';
+	const errorStatusMessage 			   = ' Status message: ';
+	const errorPayloadMessage 			   = ' Payload message: ';
 	const errorBillingAgreement			   = 'Billing agreement state is ';
-	const errorBillingAgreementMessage 	   = '. Reach out to the user to resolve this issue.'; 				    // Optional; Used for demo only
-	const authorizationDeclineMessage 	   = 'Your order was not placed and you have not been charged.'; 		// Optional; Used for demo only
-    const debug                            = 'debug';                                                           // Optional; Used for demo only
+	const errorBillingAgreementMessage 	   = '. Reach out to the user to resolve this issue.';
+	const authorizationDeclineMessage 	   = 'Your order was not placed and you have not been charged.';
+    const debug                            = 'debug';
 
 
 module.exports = {
