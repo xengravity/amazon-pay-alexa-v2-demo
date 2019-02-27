@@ -15,12 +15,11 @@
 
 const askSDK        = require( 'ask-sdk-core' );
 const config        = require( 'config' );
-const directive     = require( 'directive' );
+const directiveBuilder = require('directive-builder');
 const error         = require( 'error-handler' );
 const payload       = require( 'payload' );
 const utilities     = require( 'utilities' );
 const s3Adapter     = require( 'ask-sdk-s3-persistence-adapter' ).S3PersistenceAdapter;
-let persistence     = '';
 
 // Welcome, are you interested in a starter kit or a refill subscription?
 const LaunchRequestHandler = {
@@ -84,6 +83,8 @@ const InProgressStarterKitIntent = {
                     }
 
                     // TODO: Pull refill subscription logic here                                 
+                } else {
+                    console.log(`had no match for products`);
                 }
             } 
         }
@@ -110,7 +111,7 @@ function AmazonPaySetup ( handlerInput, productType ) {
 
     // If you do not have a billing agreement, set the Setup payload and send the request directive
     const setupPayload              = payload.buildSetup( consentToken );        
-    const setupRequestDirective     = directive.buildDirective( config.directiveType, config.connectionSetup, setupPayload, token );
+    const setupRequestDirective     =  directiveBuilder.createSetupDirective(setupPayload, token);
 
     return handlerInput.responseBuilder
                         .addDirective( setupRequestDirective )
@@ -129,7 +130,7 @@ function AmazonPayCharge ( handlerInput ) {
     const consentToken              = utilities.getConsentToken( handlerInput );
     const token                     = utilities.generateRandomString( 12 );    
     const chargePayload             = payload.buildCharge( consentToken, billingAgreementId );
-    const chargeRequestDirective    = directive.buildDirective( config.directiveType, config.connectionCharge, chargePayload, token );
+    const chargeRequestDirective    = directiveBuilder.createChargeDirective(chargePayload, token);
 
     return handlerInput.responseBuilder
                         .addDirective( chargeRequestDirective )

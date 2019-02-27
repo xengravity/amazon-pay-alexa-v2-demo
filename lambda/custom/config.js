@@ -11,16 +11,11 @@ const utilities = require( 'utilities' );
 
 
 // GLOBAL
-    const sellerId                      = '';                             // Required; Amazon Pay seller ID 
-// daneu@: should we rename to merchantId?
-// DIRECTIVE CONFIG
-    const directiveType                 = 'Connections.SendRequest';                                        // Required;
-    const connectionSetup               = 'Setup';                                                          // Required;    
-    const connectionCharge              = 'Charge';                                                         // Required;
+    const merchantId                      = '';                             // Required; Amazon Pay seller ID 
 
 // PAYLOAD
     const version                       = '2';                                                              // Required;
-
+ 
 // SETUP    
     const checkoutLanguage              = 'en_US';                                                          // Optional; US must be en_US
     const countryOfEstablishment        = 'US';                                                             // Required;
@@ -142,12 +137,7 @@ const utilities = require( 'utilities' );
 
 module.exports = {
 	// GLOBAL
-    'sellerId': 						sellerId,
-
-    // DIRECTIVE CONFIG
-    'directiveType': 					directiveType,
-    'connectionSetup': 					connectionSetup,
-    'connectionCharge': 				connectionCharge,
+    'sellerId': 						merchantId,
 
     // PAYLOAD
     'version':                          version,
