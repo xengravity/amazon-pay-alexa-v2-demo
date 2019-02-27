@@ -66,10 +66,15 @@ const InProgressStarterKitIntent = {
                     
                     // No, I do not want to buy anything; exit the skill
                     if ( currentSlot.name === 'KitPurchaseIntentSlot' && currentSlotValue === 'no' ) {
+                        // re-engage for different product
+                        const { attributesManager }     = handlerInput;
+                        let attributes                  = attributesManager.getSessionAttributes( );
+                        attributes.reengage                = true;
+                        attributesManager.setSessionAttributes( attributes );  
+
                         return handlerInput.responseBuilder
                             .speak( config.noIntentResponse )
-                            .addElicitSlotDirective( currentSlot.name )
-                            .withShouldEndSession( true )
+                            .withShouldEndSession( false )
                             .getResponse( );
                     }
 
@@ -229,10 +234,17 @@ const CompletedRefillIntentHandler = {
         const yesNoResponse         = `${slotValues.RefillPurchaseIntentSlot.resolved}`;
 
         if ( yesNoResponse === 'no' ){
+            
+            // try to re-engage the customer for different products
+            const { attributesManager }     = handlerInput;
+            let attributes                  = attributesManager.getSessionAttributes( );
+            attributes.reengage                = true;
+            attributesManager.setSessionAttributes( attributes );  
+            
             return handlerInput.responseBuilder
                 // I don't want to buy anything, exit the skill
                 .speak( config.noIntentResponse )
-                .withShouldEndSession( true )
+                .withShouldEndSession( false )
                 .getResponse();
         } else {
             // Yes, I want to buy the refill subscription
@@ -249,11 +261,21 @@ const YesIntentHandler = {
     },
     handle( handlerInput ) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
-        // Did setup already happen?
+        
         const { attributesManager }     = handlerInput;
         let attributes                  = attributesManager.getSessionAttributes( );             
         const setupHappened             = attributes.setup;
 
+        if(attributes.reengage){
+            attributes.reengage                = false;
+            attributesManager.setSessionAttributes( attributes );
+            return handlerInput.responseBuilder
+                .speak(config.launchRequestQuestionResponse)
+                .reprompt(config.launchRequestQuestionResponse)
+                .withShouldEndSession(false)
+                .getResponse();  
+        }
+        // Did setup already happen?
         if ( setupHappened ) {
             return AmazonPayCharge( handlerInput );    
         } else {
@@ -266,7 +288,7 @@ const YesIntentHandler = {
 };
 
 
-// testing
+
 const NoIntentHandler = {
     canHandle( handlerInput ) {
         return handlerInput.requestEnvelope.request.type        === 'IntentRequest' &&
@@ -274,7 +296,19 @@ const NoIntentHandler = {
     },
     handle( handlerInput ) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
-        // Currently we do not do anything with "no" outside of other intents, directing to fallback
+        const { attributesManager }     = handlerInput;
+        let attributes                  = attributesManager.getSessionAttributes( );       
+        console.log(`Attributes: ${JSON.stringify(attributes)}`);      
+        
+        if(attributes.reengage){
+            // cleanup
+            attributes.reengage                = false;
+            attributesManager.setSessionAttributes( attributes );
+            console.log(`Attributes: ${JSON.stringify(attributes)}`);   
+            // exit
+            return ExitSkillIntentHandler.handle(handlerInput);
+        }  
+        // catching unexpected no's
         return FallbackIntentHandler.handle(handlerInput);
     }
 };
@@ -456,7 +490,7 @@ const ExitSkillIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'AMAZON.CancelIntent');
     },
     handle( handlerInput ) {
-        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
+        console.log(`Exiting skill: ${JSON.stringify(handlerInput)}`);
         return handlerInput.responseBuilder
                             // TODO: Get official response
                             .speak( 'see ya later!' )

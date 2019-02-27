@@ -15,7 +15,7 @@ const GENERAL = {
     paymentAction 				: 'AuthorizeAndCapture', 											// Required; Authorize or AuthorizeAndCapture
     transactionTimeout: 0,
     platformId: undefined,
-    bucketName: "no-nicks-daneu"
+    bucketName: ""
 };
 
 const REGIONAL = {
@@ -51,8 +51,8 @@ const REGIONAL = {
 	const launchRequestWelcomeResponse     = launchRequestWelcomeTitle +'We have everything you need for the perfect shave.';
 	const launchRequestQuestionResponse    = 'Are you interested in a starter kit, or refills?';
 
-// NO INTENT	
-    const noIntentResponse 				   = 'Okay. Your order won\'t be placed.';										 
+// NOt willing to buy INTENT response
+    const noIntentResponse 				   = 'Okay. Do you want to order something else?'
 
 // CARD INFORMATION
 	const storeURL						   = 'www.nonicks.com';
