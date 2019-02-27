@@ -3,12 +3,12 @@ let config = require('config');
 const setupPayloadVersioning = {
     type: 'SetupAmazonPayRequest',
     version: '2'
-}
+};
 
 const processPayloadVersioning = {
     type: 'ChargeAmazonPayRequest',
     version: '2'
-}
+};
 
 var setupPayload = function (language) {
     console.log(language);

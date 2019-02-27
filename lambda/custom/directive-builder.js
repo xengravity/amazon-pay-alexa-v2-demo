@@ -3,18 +3,18 @@
 const directiveType = 'Connections.SendRequest';
 const setupDirective = {
     name: "Setup",
-}
+};
 
 const chargeDirective = {
     name: "Charge",
-}
+};
 
 function createDirective(name, payload, token) {
     var directive = {};
-    directive['type'] = directiveType;
-    directive['name'] = name;
-    directive['payload'] = payload;
-    directive['token'] = token;
+    directive.type = directiveType;
+    directive.name = name;
+    directive.payload = payload;
+    directive.token = token;
     return directive;
 }
 

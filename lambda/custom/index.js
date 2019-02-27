@@ -522,7 +522,7 @@ const SessionEndedRequestHandler = {
     },
     handle(handlerInput) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
-        console.log(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`)
+        console.log(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`);
 
         // TODO: possibly a good spot to cleanup session state. Caution, only on unexpected reasons, not always, otherwise we cannot make use of picking up a session again
 
