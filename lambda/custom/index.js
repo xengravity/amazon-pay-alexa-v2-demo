@@ -15,12 +15,18 @@
 
 const askSDK        = require( 'ask-sdk-core' );
 const config        = require( 'config' );
-const directive     = require( 'directive' );
+const directiveBuilder = require('directive-builder');
+const payloadBuilder = require('payload-builder');
 const error         = require( 'error-handler' );
-const payload       = require( 'payload' );
 const utilities     = require( 'utilities' );
 const s3Adapter     = require( 'ask-sdk-s3-persistence-adapter' ).S3PersistenceAdapter;
 let persistence     = '';
+
+const products = Object.freeze({
+    KIT: "kit",
+    UPGRADE: "upgrade",
+    REFILL: "refill"
+});
 
 // Welcome, are you interested in a starter kit or a refill subscription?
 const LaunchRequestHandler = {
@@ -29,12 +35,6 @@ const LaunchRequestHandler = {
     },
     handle( handlerInput ) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
-        // TODO: Remove workaround to reset setup status
-        const { attributesManager }     = handlerInput;
-        let attributes                  = attributesManager.getSessionAttributes( );
-        attributes.setup                = false;
-        attributesManager.setSessionAttributes( attributes );         
-   
         return handlerInput.responseBuilder
 				            .speak( config.launchRequestWelcomeResponse + ' ' + config.launchRequestQuestionResponse )
                             .withStandardCard( config.launchRequestWelcomeTitle, config.storeURL, config.logoURL )
@@ -66,24 +66,31 @@ const InProgressStarterKitIntent = {
                     
                     // No, I do not want to buy anything; exit the skill
                     if ( currentSlot.name === 'KitPurchaseIntentSlot' && currentSlotValue === 'no' ) {
+                        // re-engage for different product
+                        const { attributesManager }     = handlerInput;
+                        let attributes                  = attributesManager.getSessionAttributes( );
+                        attributes.reengage                = true;
+                        attributesManager.setSessionAttributes( attributes );  
+
                         return handlerInput.responseBuilder
                             .speak( config.noIntentResponse )
-                            .addElicitSlotDirective( currentSlot.name )
-                            .withShouldEndSession( true )
+                            .withShouldEndSession( false )
                             .getResponse( );
                     }
 
                     // No, I do not want to upgrade, just buy the starter kit
                     if ( currentSlot.name === 'UpgradeKitIntentSlot' && currentSlotValue === 'no' ) {
-                        return AmazonPaySetup( handlerInput, 'kit' );
+                        return AmazonPaySetup( handlerInput, products.KIT );
                     }
 
                     // Yes, I do want to upgrade the starter kit
                     if ( currentSlot.name === 'UpgradeKitIntentSlot' && currentSlotValue === 'yes' ) {
-                        return AmazonPaySetup( handlerInput, 'upgrade' );                  
+                        return AmazonPaySetup( handlerInput, products.UPGRADE );                  
                     }
 
                     // TODO: Pull refill subscription logic here                                 
+                } else {
+                    console.log(`had no match for products`);
                 }
             } 
         }
@@ -103,14 +110,23 @@ function AmazonPaySetup ( handlerInput, productType ) {
 
     attributes.productType      = productType;
     attributesManager.setSessionAttributes( attributes );
+    
+    // permission check
+    const permissions = utilities.getPermissions(handlerInput);
+    const amazonPayPermission = permissions.scopes['payments:autopay_consent'];
+    if (amazonPayPermission.status === "DENIED") {
+        return handlerInput.responseBuilder
+        .speak( config.enablePermission )
+        .withAskForPermissionsConsentCard( [ config.scope ] )
+        .getResponse();
+    }
 
     // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
-    const consentToken              = utilities.getConsentToken( handlerInput );
     const token                     = utilities.generateRandomString( 12 );
 
     // If you do not have a billing agreement, set the Setup payload and send the request directive
-    const setupPayload              = payload.buildSetup( consentToken );        
-    const setupRequestDirective     = directive.buildDirective( config.directiveType, config.connectionSetup, setupPayload, token );
+    const setupPayload              = payloadBuilder.setupPayload(handlerInput.requestEnvelope.request.locale);
+    const setupRequestDirective     =  directiveBuilder.createSetupDirective(setupPayload, token);
 
     return handlerInput.responseBuilder
                         .addDirective( setupRequestDirective )
@@ -120,16 +136,30 @@ function AmazonPaySetup ( handlerInput, productType ) {
 
 // Consumer has requested checkout and wants to be charged
 function AmazonPayCharge ( handlerInput ) {
-    // Get session attributes
-    const { attributesManager }     = handlerInput;
-    let attributes                  = attributesManager.getSessionAttributes( );
-    const billingAgreementId        = attributes.billingAgreementId;
 
+    // permission check
+    const permissions = utilities.getPermissions(handlerInput);
+    const amazonPayPermission = permissions.scopes['payments:autopay_consent'];
+    if (amazonPayPermission.status === "DENIED") {
+        return handlerInput.responseBuilder
+        .speak( config.enablePermission )
+        .withAskForPermissionsConsentCard( [ config.scope ] )
+        .getResponse();
+    }
+
+    // Get session attributes
+    const { attributesManager } = handlerInput;
+    let attributes  = attributesManager.getSessionAttributes( );
+    const billingAgreementId = attributes.billingAgreementId;
+    const authorizationReferenceId = utilities.generateRandomString(16);
+    const sellerOrderId = utilities.generateRandomString(6);
+    const locale = handlerInput.requestEnvelope.request.locale;
+    const token = utilities.generateRandomString( 12 );    
+    const amount = config.REGIONAL[locale].amount;
     // Set the Charge payload and send the request directive
-    const consentToken              = utilities.getConsentToken( handlerInput );
-    const token                     = utilities.generateRandomString( 12 );    
-    const chargePayload             = payload.buildCharge( consentToken, billingAgreementId );
-    const chargeRequestDirective    = directive.buildDirective( config.directiveType, config.connectionCharge, chargePayload, token );
+    
+    const chargePayload             = payloadBuilder.chargePayload(billingAgreementId, authorizationReferenceId, sellerOrderId, amount, locale);
+    const chargeRequestDirective    = directiveBuilder.createChargeDirective(chargePayload, token);
 
     return handlerInput.responseBuilder
                         .addDirective( chargeRequestDirective )
@@ -146,23 +176,23 @@ function GetResponse ( stage, template, productType, shippingAddress ) {
     let cartSummarySubscription     = config.cartSummarySubscription;
     let confirmationCardResponse    = template;
     let confirmationItem            = '';      
-
+    console.log(productType + ' vs ' + products.KIT);
     switch ( productType ) {
-        case 'kit':
+        case products.KIT:
             productType             = 'Starter Kit';
             confirmationItem        = 'Starter Kit';
             productPrice            = 9;
             cartSummarySubscription = '';
             break;
 
-        case 'refill':
+        case products.REFILL:
             confirmationItem        = 'Refill Subscription';   
             productPrice            = 20;
             subscriptionPrice       = 20;
             cartSummarySubscription = cartSummarySubscription.replace( '{subscriptionPrice}', subscriptionPrice );
             break;
 
-        case 'upgrade':
+        case products.UPGRADE:
             productType             = 'Starter Kit';
             confirmationItem        = 'Starter Kit + Refill Subscription';  
             productPrice            = 9;
@@ -205,14 +235,21 @@ const CompletedRefillIntentHandler = {
         const yesNoResponse         = `${slotValues.RefillPurchaseIntentSlot.resolved}`;
 
         if ( yesNoResponse === 'no' ){
+            
+            // try to re-engage the customer for different products
+            const { attributesManager }     = handlerInput;
+            let attributes                  = attributesManager.getSessionAttributes( );
+            attributes.reengage                = true;
+            attributesManager.setSessionAttributes( attributes );  
+            
             return handlerInput.responseBuilder
                 // I don't want to buy anything, exit the skill
                 .speak( config.noIntentResponse )
-                .withShouldEndSession( true )
+                .withShouldEndSession( false )
                 .getResponse();
         } else {
             // Yes, I want to buy the refill subscription
-            return AmazonPaySetup( handlerInput, 'refill' );  
+            return AmazonPaySetup( handlerInput, products.REFILL );  
         }
     }
 };
@@ -225,12 +262,25 @@ const YesIntentHandler = {
     },
     handle( handlerInput ) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
-        // Did setup already happen?
+        
         const { attributesManager }     = handlerInput;
         let attributes                  = attributesManager.getSessionAttributes( );             
         const setupHappened             = attributes.setup;
 
+        if(attributes.reengage){
+            attributes.reengage = false;
+            attributesManager.setSessionAttributes( attributes );
+            return handlerInput.responseBuilder
+                .speak(config.launchRequestQuestionResponse)
+                .reprompt(config.launchRequestQuestionResponse)
+                .withShouldEndSession(false)
+                .getResponse();  
+        }
+        // Did setup already happen?
         if ( setupHappened ) {
+            // cleanup
+            attributes.setup = false;
+            attributesManager.setSessionAttributes( attributes );
             return AmazonPayCharge( handlerInput );    
         } else {
              return handlerInput.responseBuilder
@@ -242,14 +292,99 @@ const YesIntentHandler = {
 };
 
 
-// You requested the Setup or Charge directive and are now receiving the Connections.Response
-const ConnectionsResponseHandler = {
+
+const NoIntentHandler = {
     canHandle( handlerInput ) {
-        return handlerInput.requestEnvelope.request.type === 'Connections.Response';
+        return handlerInput.requestEnvelope.request.type        === 'IntentRequest' &&
+               handlerInput.requestEnvelope.request.intent.name === 'AMAZON.NoIntent';
     },
     handle( handlerInput ) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
-        const connectionName                  	    = handlerInput.requestEnvelope.request.name;
+        const { attributesManager }     = handlerInput;
+        let attributes                  = attributesManager.getSessionAttributes( );       
+        console.log(`Attributes: ${JSON.stringify(attributes)}`);      
+        
+        if(attributes.reengage){
+            // cleanup
+            attributes.reengage                = false;
+            attributesManager.setSessionAttributes( attributes );
+            console.log(`Attributes: ${JSON.stringify(attributes)}`);   
+            // exit
+            return ExitSkillIntentHandler.handle(handlerInput);
+        }  
+        if(attributes.setup){
+            // customer decided to not checkout, while having filled the cart already
+            attributes.reengage                = true;
+            // todo: should setup akso be set to false?
+            // todo: maybe replace setup, reengage,  ... with "STATES" of a state machine?
+            attributesManager.setSessionAttributes( attributes );  
+
+            return handlerInput.responseBuilder
+                .speak( config.noIntentResponse )
+                .withShouldEndSession( false )
+                .getResponse( );
+        }
+        // catching unexpected no's
+        return FallbackIntentHandler.handle(handlerInput);
+    }
+};
+
+// You requested the Setup directive and are now receiving the Connections.Response
+const SetupConnectionsResponseHandler = {
+    canHandle( handlerInput ) {
+        return handlerInput.requestEnvelope.request.type === 'Connections.Response' &&
+        handlerInput.requestEnvelope.request.name === directiveBuilder.setupDirectiveName;
+    },
+    handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
+        const connectionResponsePayload       	    = handlerInput.requestEnvelope.request.payload;
+        const connectionResponseStatusCode    	    = handlerInput.requestEnvelope.request.status.code;
+
+        // If there are integration or runtime errors, do not charge the payment method
+        if ( connectionResponseStatusCode != 200 ) {
+            return error.handleErrors( handlerInput );
+        }
+
+        // Get the billingAgreementId and billingAgreementStatus from the Setup Connections.Response
+        const billingAgreementId 			= connectionResponsePayload.billingAgreementDetails.billingAgreementId;
+        const billingAgreementStatus 		= connectionResponsePayload.billingAgreementDetails.billingAgreementStatus;              
+
+         // If billingAgreementStatus is valid, Charge the payment method    
+        if ( billingAgreementStatus === 'OPEN' ) {
+
+            // Save billingAgreementId attributes because directives will close the session
+            const { attributesManager }     = handlerInput;
+            let attributes                  = attributesManager.getSessionAttributes( );
+            attributes.billingAgreementId   = billingAgreementId;
+            attributes.setup                = true;
+            console.log(`Attributes after setup: ${JSON.stringify(attributes)}`);
+            attributesManager.setSessionAttributes( attributes );                      
+
+            const shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
+            let productType                 = attributes.productType;
+            let cartSummaryResponse         = GetResponse( 'summary', config.cartSummaryResponse, productType, shippingAddress );
+
+            return handlerInput.responseBuilder
+                .speak( cartSummaryResponse )
+                .withShouldEndSession( false )
+                .getResponse( );                    
+
+        // If billingAgreementStatus is not valid, do not Charge the payment method	
+        } else {
+            return error.handleBillingAgreementState( billingAgreementStatus, handlerInput );
+        }
+
+    }
+};
+
+// You requested the Charge directive and are now receiving the Connections.Response
+const ChargeConnectionsResponseHandler = {
+    canHandle( handlerInput ) {
+        return handlerInput.requestEnvelope.request.type === 'Connections.Response' &&
+        handlerInput.requestEnvelope.request.name === directiveBuilder.chargeDirectiveName;
+    },
+    handle( handlerInput ) {
+        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         const connectionResponsePayload       	    = handlerInput.requestEnvelope.request.payload;
         const connectionResponseStatusCode    	    = handlerInput.requestEnvelope.request.status.code;
 
@@ -257,65 +392,29 @@ const ConnectionsResponseHandler = {
         if ( connectionResponseStatusCode != 200 ) {
             return error.handleErrors( handlerInput );
 
+        } 
+        const authorizationStatusState = connectionResponsePayload.authorizationDetails.state;
+        
+        // Authorization is declined, tell the customer their order was not placed
+        if( authorizationStatusState === 'Declined' ) {
+            const authorizationStatusReasonCode = connectionResponsePayload.authorizationDetails.reasonCode;
+
+            return error.handleAuthorizationDeclines( authorizationStatusReasonCode, handlerInput );
+
+        // CERTIFICATION REQUIREMENT 
+        // Authorization is approved, tell the customer their order was placed and send them a card with order details  
         } else {
-	        // Receiving Setup Connections.Response
-	        if ( connectionName === config.connectionSetup ) {
-	            const token 						= utilities.generateRandomString( 12 );
+            // Get the productType attribute
+            const { attributesManager }     = handlerInput;
+            let attributes                  = attributesManager.getSessionAttributes( );             
+            const productType               = attributes.productType;
+            let confirmationCardResponse    = GetResponse( 'confirmation', config.confirmationCardResponse, productType, null );
 
-	            // Get the billingAgreementId and billingAgreementStatus from the Setup Connections.Response
-	            const billingAgreementId 			= connectionResponsePayload.billingAgreementDetails.billingAgreementId;
-				const billingAgreementStatus 		= connectionResponsePayload.billingAgreementDetails.billingAgreementStatus;              
-
-				 // If billingAgreementStatus is valid, Charge the payment method    
-				if ( billingAgreementStatus === 'OPEN' ) {
-
-                    // Save billingAgreementId attributes because directives will close the session
-                    const { attributesManager }     = handlerInput;
-                    let attributes                  = attributesManager.getSessionAttributes( );
-                    attributes.billingAgreementId   = billingAgreementId;
-                    attributes.setup                = true;
-                    attributesManager.setSessionAttributes( attributes );                      
-
-                    const shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
-                    let productType                 = attributes.productType;
-                    let cartSummaryResponse         = GetResponse( 'summary', config.cartSummaryResponse, productType, shippingAddress );
-
-                    return handlerInput.responseBuilder
-                        .speak( cartSummaryResponse )
-                        .withShouldEndSession( false )
-                        .getResponse( );                    
-
-	            // If billingAgreementStatus is not valid, do not Charge the payment method	
-				} else {
-					return error.handleBillingAgreementState( billingAgreementStatus, handlerInput );
-				}
-
-	        // Receiving Charge Connections.Response
-	        } else if ( connectionName === config.connectionCharge ) {
-            	const authorizationStatusState = connectionResponsePayload.authorizationDetails.state;
-            	
-                // Authorization is declined, tell the customer their order was not placed
-            	if( authorizationStatusState === 'Declined' ) {
-            		const authorizationStatusReasonCode = connectionResponsePayload.authorizationDetails.reasonCode;
-
-            		return error.handleAuthorizationDeclines( authorizationStatusReasonCode, handlerInput );
-
-                // CERTIFICATION REQUIREMENT 
-                // Authorization is approved, tell the customer their order was placed and send them a card with order details  
-            	} else {
-                    // Get the productType attribute
-                    const { attributesManager }     = handlerInput;
-                    let attributes                  = attributesManager.getSessionAttributes( );             
-                    const productType               = attributes.productType;
-                    let confirmationCardResponse    = GetResponse( 'confirmation', config.confirmationCardResponse, productType, null );
-
-		            return handlerInput.responseBuilder
-						            	.speak( config.confirmationIntentResponse )
-                                        .withStandardCard( config.confirmationTitle, confirmationCardResponse, config.logoURL )
-						            	.withShouldEndSession( true )
-						            	.getResponse( );
-            	}
-	        }
+            return handlerInput.responseBuilder
+                                .speak( config.confirmationIntentResponse )
+                                .withStandardCard( config.confirmationTitle, confirmationCardResponse, config.logoURL )
+                                .withShouldEndSession( true )
+                                .getResponse( );
         }
     }
 };
@@ -395,7 +494,7 @@ const OrderTrackerIntentHandler = {
         return handlerInput.responseBuilder
                             .speak( config.orderTrackerIntentResponse )
                             .withStandardCard( config.orderTrackerTitle, config.orderTrackerCardResponse, config.logoURL )
-                            .withShouldEndSession( false )
+                            .withShouldEndSession( true )
                             .getResponse( );
     }
 };
@@ -408,7 +507,7 @@ const ExitSkillIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'AMAZON.CancelIntent');
     },
     handle( handlerInput ) {
-        console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
+        console.log(`Exiting skill: ${JSON.stringify(handlerInput)}`);
         return handlerInput.responseBuilder
                             // TODO: Get official response
                             .speak( 'see ya later!' )
@@ -424,7 +523,13 @@ const SessionEndedRequestHandler = {
     handle(handlerInput) {
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
         console.log(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`)
-        return handlerInput.responseBuilder.getResponse();
+
+        // TODO: possibly a good spot to cleanup session state. Caution, only on unexpected reasons, not always, otherwise we cannot make use of picking up a session again
+
+        return handlerInput.responseBuilder
+            .speak("bye")
+            .withShouldEndSession(true)
+            .getResponse();
     },
 };
 
@@ -441,7 +546,7 @@ const ErrorHandler = {
         return handlerInput.responseBuilder
             .speak( speechText )
             .reprompt( speechText )
-            .getResponse( );
+            .getResponse();
     }
 };
 
@@ -499,19 +604,20 @@ exports.handler = askSDK.SkillBuilders
                             InProgressStarterKitIntent,
                             CompletedRefillIntentHandler,
                             YesIntentHandler, 
-							ConnectionsResponseHandler,
+                            ChargeConnectionsResponseHandler,
+                            SetupConnectionsResponseHandler,
                             RefundOrderIntentHandler,
                             CancelOrderIntentHandler,
                             HelpIntentHandler,
                             OrderTrackerIntentHandler,
                             ExitSkillIntentHandler,
                             SessionEndedRequestHandler,
-                            FallbackIntentHandler )
+                            FallbackIntentHandler,
+                            NoIntentHandler)
                         .addRequestInterceptors( PersistenceRequestInterceptor )
                         .addResponseInterceptors( PersistenceResponseInterceptor )                        
-                        .withPersistenceAdapter(
-                            persistence = new s3Adapter( 
-                                { bucketName: "no-nicks-daneu" } ))
+                        .withPersistenceAdapter( persistence = new s3Adapter( 
+                            { bucketName: config.GENERAL.bucketName } ))
                         .addErrorHandlers(
                             ErrorHandler )
 						.lambda( );

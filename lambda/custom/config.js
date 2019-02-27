@@ -9,52 +9,33 @@ const utilities = require( 'utilities' );
     https://developer.integ.amazon.com/docs/amazon-pay/amazon-pay-apis-for-alexa.html    
 **/
 
+const GENERAL = {
+    VERSION: "2.0",
+    needAmazonShippingAddress: true,
+    paymentAction 				: 'AuthorizeAndCapture', 											// Required; Authorize or AuthorizeAndCapture
+    transactionTimeout: 0,
+    platformId: undefined,
+    bucketName: ''
+};
 
-// GLOBAL
-    const sellerId                      = '';                             // Required; Amazon Pay seller ID 
-// daneu@: should we rename to merchantId?
-// DIRECTIVE CONFIG
-    const directiveType                 = 'Connections.SendRequest';                                        // Required;
-    const connectionSetup               = 'Setup';                                                          // Required;    
-    const connectionCharge              = 'Charge';                                                         // Required;
-
-// PAYLOAD
-    const version                       = '2';                                                              // Required;
-
-// SETUP    
-    const checkoutLanguage              = 'en_US';                                                          // Optional; US must be en_US
-    const countryOfEstablishment        = 'US';                                                             // Required;
-    const ledgerCurrency                = 'USD';                                                            // Required;
-    const needAmazonShippingAddress     = true;                                                             // Optional; Must be boolean
-    const sandboxMode                   = true;                                                             // Optional; Must be false for certification || production; Must be true for sandbox testing
-    const sandboxCustomerEmailId        = '';                         // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
-
-// PROCESS PAYMENT
-	const paymentAction 				= 'AuthorizeAndCapture'; 											// Required; Authorize or AuthorizeAndCapture
-	const providerAttributes 			= ''; 																// Optional; Required if Solution Provider
-	const sellerOrderAttributes 		= ''; 																// Optional;
-
-// AUTHORIZE ATTRIBUTES
-	const authorizationReferenceId    	= utilities.generateRandomString( 32 );                 			// Required; Must be unique, max 32 chars
-	const sellerAuthorizationNote     	= utilities.getSimulationString( '' );					 			// Optional; Max 255 chars
-	const softDescriptor              	= '16charSoftDesc';	                                    			// Optional; Max 16 chars
-	const transactionTimeout 			= 0;																// Optional; The default value for Alexa transactions is 0.
-				
-// AUTHORIZE AMOUNT
-	const amount                    	= '0.01';							        						// Required; Max $150,000.00 USD
-    const currencyCode               	= 'USD';															// Required;
-
-// SELLER ORDER ATTRIBUTES
-    const customInformation           	= 'customInformation max 1024 chars';                      		 	// Optional; Max 1024 chars
-    const sellerNote                  	= 'sellerNote max 1024 chars';										// Optional; Max 1024 chars
-    const sellerOrderId               	= 'Alexa unique sellerOrderId';                            		 	// Optional; Merchant specific order ID
-    const sellerStoreName             	= 'No Nicks';                    			       		        	// Optional; Documentation calls this out as storeName not sellerStoreName
-
-// ADDITIONAL ATTRIBUTES
-	const platformId 					= ''; 																// Optional; Used for Solution Providers
-	const sellerBillingAgreementId 		= ''; 																// Optional; The merchant-specified identifier of this billing agreement
-	const storeName 					= sellerStoreName; 													// Optional; Why is there 2 store names?
-
+const REGIONAL = {
+    "en-US": {
+        sellerId : '',                             // Required; Amazon Pay seller ID 
+        checkoutLanguage              : 'en_US',                                                          // Optional; US must be en_US
+        countryOfEstablishment        : 'US',                                                             // Required;
+        ledgerCurrency                : 'USD',                                                            // Required;
+        sandboxMode                   : true,                                                             // Optional; Must be false for certification || production; Must be true for sandbox testing
+        sandboxCustomerEmailId        : '',                         // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
+        sellerAuthorizationNote : utilities.getSimulationString( '' ),					 			// Optional; Max 255 chars
+        softDescriptor          : '16charSoftDesc',	                                    			// Optional; Max 16 chars
+        amount                    	: '0.01',							        						// Required; Max $150,000.00 USD
+        currencyCode               	: 'USD',															// Required;
+        // SELLER ORDER ATTRIBUTES
+        customInformation           	: 'customInformation max 1024 chars',                      		 	// Optional; Max 1024 chars
+        sellerNote                  	: 'sellerNote max 1024 chars',										// Optional; Max 1024 chars
+        sellerStoreName             	: 'No Nicks',                    			       		        	// Optional; Documentation calls this out as storeName not sellerStoreName
+    }
+};
 
 /** 
     The following strings DO NOT interact with Amazon Pay
@@ -66,12 +47,12 @@ const utilities = require( 'utilities' );
 
 
 // LAUNCH INTENT
-    const launchRequestWelcomeTitle        = 'Welcome to '+ sellerStoreName + '. '; 
+    const launchRequestWelcomeTitle        = 'Welcome to '+ REGIONAL["en-US"].sellerStoreName + '. '; 
 	const launchRequestWelcomeResponse     = launchRequestWelcomeTitle +'We have everything you need for the perfect shave.';
 	const launchRequestQuestionResponse    = 'Are you interested in a starter kit, or refills?';
 
-// NO INTENT	
-    const noIntentResponse 				   = 'Okay. Your order won\'t be placed.';										 
+// NOt willing to buy INTENT response
+    const noIntentResponse 				   = 'Okay. Do you want to order something else?'
 
 // CARD INFORMATION
 	const storeURL						   = 'www.nonicks.com';
@@ -80,7 +61,7 @@ const utilities = require( 'utilities' );
 // CART SUMMARY
     const cartSummaryCheckout              = ' Do you want to check out now?';
     const cartSummarySubscription          = ' Every 2 months, you’ll be charged {subscriptionPrice} dollars for your refill.';
-    const cartSummaryResponse              = 'Your total for the ' + sellerStoreName + ' {productType} is {productPrice} dollars and will ship to your address at {shippingAddress}.<break time=".5s"/>';
+    const cartSummaryResponse              = 'Your total for the ' + REGIONAL["en-US"].sellerStoreName + ' {productType} is {productPrice} dollars and will ship to your address at {shippingAddress}.<break time=".5s"/>';
     
 // CANCEL & REFUND CONTACT DETAILS
     const storePhoneNumber                 = '1-234-567-8910';
@@ -100,8 +81,8 @@ const utilities = require( 'utilities' );
 // ORDER CONFIRMATION - Required
     const confirmationTitle                = 'Order Confirmation Details';
     const confirmationPlaceOrder           = 'Your order has been placed.';
-    const confirmationThanks               = 'Thanks for shaving with '+ sellerStoreName +'.';
-    const confirmationIntentResponse       = sellerStoreName + ' will email you when your order ships. Thanks for shaving with '+ sellerStoreName +'.';
+    const confirmationThanks               = 'Thanks for shaving with '+ REGIONAL["en-US"].sellerStoreName +'.';
+    const confirmationIntentResponse       = REGIONAL["en-US"].sellerStoreName + ' will email you when your order ships. Thanks for shaving with '+ REGIONAL["en-US"].sellerStoreName +'.';
     const confirmationItems                = 'Products: 1 {productType}';
     const confirmationTotal                = 'Total amount: ${productPrice}';
     const confirmationTracking             = 'Tracking number: 9400121699000025552416.';
@@ -119,7 +100,7 @@ const utilities = require( 'utilities' );
     const helpCommandsIntentResponse       = 'To check order status, say "where is my order". To cancel an order, say "cancel order." To ask for a refund, say "refund."';
 
     // Fallback INTENT
-    const fallbackHelpMessage = 'Sorry, I didn\'t get this one. ' + sellerStoreName + ' can help you with the following: ' + helpCommandsIntentResponse;
+    const fallbackHelpMessage = 'Sorry, I didn\'t get this one. ' + REGIONAL["en-US"].sellerStoreName + ' can help you with the following: ' + helpCommandsIntentResponse;
 
 /** 
     The following strings are used to output errors to test the skill
@@ -141,43 +122,8 @@ const utilities = require( 'utilities' );
 
 
 module.exports = {
-	// GLOBAL
-    'sellerId': 						sellerId,
-
-    // DIRECTIVE CONFIG
-    'directiveType': 					directiveType,
-    'connectionSetup': 					connectionSetup,
-    'connectionCharge': 				connectionCharge,
-
-    // PAYLOAD
-    'version':                          version,
-
-    // SETUP
-    'countryOfEstablishment': 			countryOfEstablishment,
-    'ledgerCurrency': 					ledgerCurrency,
-    'checkoutLanguage': 				checkoutLanguage,
-    'needAmazonShippingAddress': 		needAmazonShippingAddress,
-    'sandboxCustomerEmailId': 			sandboxCustomerEmailId,
-    'sandboxMode': 						sandboxMode,
-
-    // PROCESS PAYMENT
-    'paymentAction': 					paymentAction,
-    'sellerOrderAttributes': 			sellerOrderAttributes,
-    'providerAttributes': 				providerAttributes,
-
-    // AUTHORIZE ATTRIBUTES
-    'authorizationReferenceId': 		authorizationReferenceId,
-    'sellerAuthorizationNote': 			sellerAuthorizationNote,
-    'softDescriptor': 					softDescriptor,
-    'transactionTimeout': 				transactionTimeout,
-    'amount': 							amount,
-    'currencyCode': 					currencyCode,
-    'sellerOrderId': 					sellerOrderId,
-    'sellerStoreName': 					sellerStoreName,
-    'customInformation': 				customInformation,
-    'sellerNote': 						sellerNote,
-    'platformId': 						platformId,
-    'sellerBillingAgreementId': 		sellerBillingAgreementId,
+    'GENERAL': GENERAL,
+    'REGIONAL': REGIONAL,
 
     // INTENT RESPONSE STRINGS
     'launchRequestWelcomeTitle':        launchRequestWelcomeTitle,
