@@ -16,10 +16,11 @@
 const askSDK        = require( 'ask-sdk-core' );
 const config        = require( 'config' );
 const directiveBuilder = require('directive-builder');
+const payloadBuilder = require('payload-builder');
 const error         = require( 'error-handler' );
-const payload       = require( 'payload' );
 const utilities     = require( 'utilities' );
 const s3Adapter     = require( 'ask-sdk-s3-persistence-adapter' ).S3PersistenceAdapter;
+let persistence     = '';
 
 // Welcome, are you interested in a starter kit or a refill subscription?
 const LaunchRequestHandler = {
@@ -106,11 +107,10 @@ function AmazonPaySetup ( handlerInput, productType ) {
     attributesManager.setSessionAttributes( attributes );
 
     // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
-    const consentToken              = utilities.getConsentToken( handlerInput );
     const token                     = utilities.generateRandomString( 12 );
 
     // If you do not have a billing agreement, set the Setup payload and send the request directive
-    const setupPayload              = payload.buildSetup( consentToken );        
+    const setupPayload              = payloadBuilder.setupPayload(handlerInput.requestEnvelope.request.locale);
     const setupRequestDirective     =  directiveBuilder.createSetupDirective(setupPayload, token);
 
     return handlerInput.responseBuilder
@@ -122,14 +122,17 @@ function AmazonPaySetup ( handlerInput, productType ) {
 // Consumer has requested checkout and wants to be charged
 function AmazonPayCharge ( handlerInput ) {
     // Get session attributes
-    const { attributesManager }     = handlerInput;
-    let attributes                  = attributesManager.getSessionAttributes( );
-    const billingAgreementId        = attributes.billingAgreementId;
-
+    const { attributesManager } = handlerInput;
+    let attributes  = attributesManager.getSessionAttributes( );
+    const billingAgreementId = attributes.billingAgreementId;
+    const authorizationReferenceId = utilities.generateRandomString(16);
+    const sellerOrderId = utilities.generateRandomString(6);
+    const locale = handlerInput.requestEnvelope.request.locale;
+    const token = utilities.generateRandomString( 12 );    
+    const amount = config.REGIONAL[locale].amount;
     // Set the Charge payload and send the request directive
-    const consentToken              = utilities.getConsentToken( handlerInput );
-    const token                     = utilities.generateRandomString( 12 );    
-    const chargePayload             = payload.buildCharge( consentToken, billingAgreementId );
+    
+    const chargePayload             = payloadBuilder.chargePayload(billingAgreementId, authorizationReferenceId, sellerOrderId, amount, locale);
     const chargeRequestDirective    = directiveBuilder.createChargeDirective(chargePayload, token);
 
     return handlerInput.responseBuilder
@@ -260,8 +263,7 @@ const ConnectionsResponseHandler = {
 
         } else {
 	        // Receiving Setup Connections.Response
-	        if ( connectionName === config.connectionSetup ) {
-	            const token 						= utilities.generateRandomString( 12 );
+	        if ( connectionName === "Setup" ) {
 
 	            // Get the billingAgreementId and billingAgreementStatus from the Setup Connections.Response
 	            const billingAgreementId 			= connectionResponsePayload.billingAgreementDetails.billingAgreementId;
@@ -292,7 +294,7 @@ const ConnectionsResponseHandler = {
 				}
 
 	        // Receiving Charge Connections.Response
-	        } else if ( connectionName === config.connectionCharge ) {
+	        } else if ( connectionName === "Charge" ) {
             	const authorizationStatusState = connectionResponsePayload.authorizationDetails.state;
             	
                 // Authorization is declined, tell the customer their order was not placed
@@ -510,9 +512,8 @@ exports.handler = askSDK.SkillBuilders
                             FallbackIntentHandler )
                         .addRequestInterceptors( PersistenceRequestInterceptor )
                         .addResponseInterceptors( PersistenceResponseInterceptor )                        
-                        .withPersistenceAdapter(
-                            persistence = new s3Adapter( 
-                                { bucketName: "no-nicks-daneu" } ))
+                        .withPersistenceAdapter( persistence = new s3Adapter( 
+                            { bucketName: "no-nicks-daneu" } ))
                         .addErrorHandlers(
                             ErrorHandler )
 						.lambda( );

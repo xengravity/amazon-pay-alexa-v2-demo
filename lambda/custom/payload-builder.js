@@ -1,6 +1,4 @@
-let config = require('config').AMAZON_PAY
-let util = require('utilities');
-const localization = require('localization');
+let config = require('config');
 
 const setupPayloadVersioning = {
     type: 'SetupAmazonPayRequest',
@@ -13,31 +11,30 @@ const processPayloadVersioning = {
 }
 
 var setupPayload = function (language) {
-
-    const localizationClient = localization.getClientForPayload(language);
+    console.log(language);
     const regionalConfig = config.REGIONAL[language];
     const generalConfig = config.GENERAL;
     var payload = {
         '@type': setupPayloadVersioning.type,
         '@version': setupPayloadVersioning.version,
-        'sellerId': regionalConfig.MERCHANT_ID,
-        'countryOfEstablishment': regionalConfig.COUNTRY_OF_ESTABLISHMENT,
-        'ledgerCurrency': regionalConfig.LEDGER_CURRENCY,
+        'sellerId': regionalConfig.sellerId,
+        'countryOfEstablishment': regionalConfig.countryOfEstablishment,
+        'ledgerCurrency': regionalConfig.ledgerCurrency,
         'checkoutLanguage': language,
-        'sandboxCustomerEmailId': regionalConfig.SANDBOX_CUSTOMER_EMAIL,
-        'sandboxMode': regionalConfig.SANDBOX,
-        'needAmazonShippingAddress': generalConfig.NEED_AMAZON_SHIPPING_ADDRESS,
+        'sandboxCustomerEmailId': regionalConfig.sandboxCustomerEmailId,
+        'sandboxMode': regionalConfig.sandboxMode,
+        'needAmazonShippingAddress': generalConfig.needAmazonShippingAddress,
         'billingAgreementAttributes': {
             '@type': 'BillingAgreementAttributes',
             '@version': '2',
-            'sellerNote': localizationClient.t('SELLER_NOTE'),
-            'platformId': generalConfig.PLATFORM_ID,
+            'sellerNote': regionalConfig.sellerNote,
+            'platformId': generalConfig.platformId,
             'sellerBillingAgreementAttributes': {
                 '@type': 'SellerBillingAgreementAttributes',
                 '@version': '2',
                 //'sellerBillingAgreementId': SOME RANDOM STRING,
-                'storeName': localizationClient.t('STORE_NAME'),
-                'customInformation': localizationClient.t('CUSTOM_INFO')
+                'storeName': generalConfig.sellerStoreName,
+                'customInformation': generalConfig.customInformation
             }
         }
     };
@@ -47,15 +44,14 @@ var setupPayload = function (language) {
 
 var chargePayload = function (billingAgreementId, authorizationReferenceId, sellerOrderId, amount, language) {
 
-    const localizationClient = localization.getClientForPayload(language);
     const regionalConfig = config.REGIONAL[language];
     const generalConfig = config.GENERAL;
     var payload = {
         '@type': processPayloadVersioning.type,
         '@version': processPayloadVersioning.version,
-        'sellerId': regionalConfig.MERCHANT_ID,
+        'sellerId': regionalConfig.sellerId,
         'billingAgreementId': billingAgreementId,
-        'paymentAction': generalConfig.PAYMENT_ACTION,
+        'paymentAction': generalConfig.paymentAction,
         'authorizeAttributes': {
             '@type': 'AuthorizeAttributes',
             '@version': '2',
@@ -64,19 +60,19 @@ var chargePayload = function (billingAgreementId, authorizationReferenceId, sell
                 '@type': 'Price',
                 '@version': '2',
                 'amount': amount.toString(),
-                'currencyCode': regionalConfig.LEDGER_CURRENCY
+                'currencyCode': regionalConfig.ledgerCurrency
             },
-            'transactionTimeout': generalConfig.TRANSACTION_TIMEOUT,
-            'sellerAuthorizationNote': localizationClient.t('SELLER_AUTH_NOTE'), // util.getSimulationString('AmazonRejected'), 
-            'softDescriptor': localizationClient.t('AUTH_SOFT_DESCRIPTOR')
+            'transactionTimeout': generalConfig.transactionTimeout,
+            'sellerAuthorizationNote': regionalConfig.sellerAuthorizationNote, // util.getSimulationString('AmazonRejected'), 
+            'softDescriptor': regionalConfig.softDescriptor
         },
         'sellerOrderAttributes': {
             '@type': 'SellerOrderAttributes',
             '@version': '2',
  //           'sellerOrderId': sellerOrderId,
-            'storeName': localizationClient.t('STORE_NAME'),
-            'customInformation': localizationClient.t('CUSTOM_INFO'),
-            'sellerNote': localizationClient.t('SELLER_NOTE')
+            'storeName': regionalConfig.sellerStoreName,
+            'customInformation': regionalConfig,customInformation,
+            'sellerNote': regionalConfig.sellerNote
         }
     };
     return payload;
