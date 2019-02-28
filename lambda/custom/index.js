@@ -33,7 +33,13 @@ const LaunchRequestHandler = {
         return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
     },
     handle( handlerInput ) {
+        //TODO: Evaluate this workaround to prevent setup being called prematurely 
         console.log(`Intent input: ${JSON.stringify(handlerInput)}`);
+        const { attributesManager }     = handlerInput;
+        let attributes                  = attributesManager.getSessionAttributes( );
+        attributes.setup                = false;
+        attributesManager.setSessionAttributes( attributes );       
+
         return handlerInput.responseBuilder
                             .speak( config.launchRequestWelcomeResponse + ' ' + config.launchRequestQuestionResponse )
                             .withStandardCard( config.launchRequestWelcomeTitle, config.storeURL, config.logoURL )
@@ -111,15 +117,15 @@ function AmazonPaySetup ( handlerInput, productType ) {
     attributes.productType          = productType;
     attributesManager.setSessionAttributes( attributes );
     
-    // Permission check
-    utilities.getPermissionStatus( handlerInput );
+    // Permission check - TODO confirm if needed since check exists in error handling
+    // utilities.getPermissionStatus( handlerInput );
 
     // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
     const token                     = utilities.generateRandomString( 12 );
 
     // If you do not have a billing agreement, set the Setup payload and send the request directive
     const setupPayload              = payloadBuilder.setupPayload(handlerInput.requestEnvelope.request.locale);
-    const setupRequestDirective     =  directiveBuilder.createSetupDirective(setupPayload, token);
+    const setupRequestDirective     = directiveBuilder.createSetupDirective(setupPayload, token);
 
     return handlerInput.responseBuilder
                         .addDirective( setupRequestDirective )
@@ -130,15 +136,15 @@ function AmazonPaySetup ( handlerInput, productType ) {
 // Consumer has requested checkout and wants to be charged
 function AmazonPayCharge ( handlerInput ) {
 
-    // Permission check
-    utilities.getPermissionStatus( handlerInput );
+    // Permission check - TODO confirm if needed since check exists in error handling
+    // utilities.getPermissionStatus( handlerInput );
 
     // Get session attributes
     const { attributesManager }     = handlerInput;
     let attributes                  = attributesManager.getSessionAttributes( );
     const billingAgreementId        = attributes.billingAgreementId;
-    const authorizationReferenceId  = utilities.generateRandomString(16);
-    const sellerOrderId             = utilities.generateRandomString(6);
+    const authorizationReferenceId  = utilities.generateRandomString( 16 );
+    const sellerOrderId             = utilities.generateRandomString( 6 );
     const locale                    = handlerInput.requestEnvelope.request.locale;
     const token                     = utilities.generateRandomString( 12 );    
     const amount                    = config.REGIONAL[locale].amount;

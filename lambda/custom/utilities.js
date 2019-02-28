@@ -102,8 +102,8 @@ function getSlotValues( filledSlots ) {
 
 module.exports = {
     'generateRandomString': generateRandomString,
-    'getSimulationString': getSimulationString,
-	'getSlotValues': getSlotValues,
-	'getPermissionStatus': getPermissionStatus
+    'getSimulationString': 	getSimulationString,
+	'getSlotValues': 		getSlotValues,
+	'getPermissionStatus': 	getPermissionStatus
 };
 
