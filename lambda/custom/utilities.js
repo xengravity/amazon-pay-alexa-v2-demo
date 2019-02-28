@@ -1,5 +1,7 @@
 'use strict';
 
+const config = require( 'config' );
+
 /**
     A detailed list simulation strings to use in sandboxMode can be found here:
     https://pay.amazon.com/us/developer/documentation/lpwa/201956480#201956480
@@ -42,10 +44,16 @@ function generateRandomString( length ) {
     return randomString;
 }
 
-function getPermissions(handlerInput) {
-	const permissions = handlerInput.requestEnvelope.context.System.user.permissions;
+function getPermissionStatus( handlerInput ) {
+	const permissions 			= handlerInput.requestEnvelope.context.System.user.permissions;
+    const amazonPayPermission 	= permissions.scopes[ config.scope ];
 
-	return permissions;
+    if ( amazonPayPermission.status === 'DENIED' ) {
+        return handlerInput.responseBuilder
+                            .speak( config.enablePermission )
+                            .withAskForPermissionsConsentCard( [ config.scope ] )
+                            .getResponse();
+    }
 }
 
 // Get intent slot values
@@ -96,6 +104,6 @@ module.exports = {
     'generateRandomString': generateRandomString,
     'getSimulationString': getSimulationString,
 	'getSlotValues': getSlotValues,
-	'getPermissions': getPermissions
+	'getPermissionStatus': getPermissionStatus
 };
 

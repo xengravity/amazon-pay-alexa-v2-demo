@@ -15,17 +15,17 @@
 
 const askSDK            = require( 'ask-sdk-core' );
 const config            = require( 'config' );
-const directiveBuilder  = require('directive-builder');
-const payloadBuilder    = require('payload-builder');
+const directiveBuilder  = require( 'directive-builder' );
+const payloadBuilder    = require( 'payload-builder' );
 const error             = require( 'error-handler' );
 const utilities         = require( 'utilities' );
 const s3Adapter         = require( 'ask-sdk-s3-persistence-adapter' ).S3PersistenceAdapter;
-let persistence         = '';
 const products          = Object.freeze( {
                                 KIT:     'kit',
                                 UPGRADE: 'upgrade',
                                 REFILL:  'refill'
                             } );
+let persistence         = '';
 
 // Welcome, are you interested in a starter kit or a refill subscription?
 const LaunchRequestHandler = {
@@ -112,15 +112,7 @@ function AmazonPaySetup ( handlerInput, productType ) {
     attributesManager.setSessionAttributes( attributes );
     
     // Permission check
-    const permissions               = utilities.getPermissions( handlerInput );
-    const amazonPayPermission       = permissions.scopes[ config.scope ];
-
-    if ( amazonPayPermission.status === 'DENIED' ) {
-        return handlerInput.responseBuilder
-                            .speak( config.enablePermission )
-                            .withAskForPermissionsConsentCard( [ config.scope ] )
-                            .getResponse();
-    }
+    utilities.getPermissionStatus( handlerInput );
 
     // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
     const token                     = utilities.generateRandomString( 12 );
@@ -139,16 +131,7 @@ function AmazonPaySetup ( handlerInput, productType ) {
 function AmazonPayCharge ( handlerInput ) {
 
     // Permission check
-    const permissions = utilities.getPermissions(handlerInput);
-
-    const amazonPayPermission = permissions.scopes[ config.scope ];
-
-    if (amazonPayPermission.status === 'DENIED') {
-        return handlerInput.responseBuilder
-                            .speak( config.enablePermission )
-                            .withAskForPermissionsConsentCard( [ config.scope ] )
-                            .getResponse();
-    }
+    utilities.getPermissionStatus( handlerInput );
 
     // Get session attributes
     const { attributesManager }     = handlerInput;

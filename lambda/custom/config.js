@@ -3,7 +3,7 @@
 const utilities = require( 'utilities' );
 
 /**
-    To run the skill, the minimum values you need configure are: sellerId, and sandboxCustomerEmailId
+    To run the skill, the minimum values you need configure are: sellerId, sandboxCustomerEmailId, and bucketName
 
     A detailed list of attribute descriptions can be found here:
     https://developer.integ.amazon.com/docs/amazon-pay/amazon-pay-apis-for-alexa.html    
@@ -12,9 +12,9 @@ const utilities = require( 'utilities' );
 const GENERAL = {
     VERSION:                            '2.0',                                      // Required; 
     needAmazonShippingAddress:          true,                                       // Optional; Must be boolean
-    paymentAction:                      'AuthorizeAndCapture',                      // Required; Authorize or AuthorizeAndCapture
+    paymentAction:                      'AuthorizeAndCapture',                      // Required; 'Authorize' or 'AuthorizeAndCapture'
     transactionTimeout:                 0,                                          // Optional; The default value for Alexa transactions is 0
-    platformId:                         undefined,                                  // Optional; Used for Solution Providers
+    platformId:                         undefined,                                  // Optional; Used for Solution Providers only
     bucketName:                         'no-nicks'                                  // Required; Used for S3 state management
 };
 
