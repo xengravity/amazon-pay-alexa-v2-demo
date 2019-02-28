@@ -1,18 +1,19 @@
-let config = require('config');
+const utilities = require( 'utilities' );
+let config      = require( 'config' );
 
 const setupPayloadVersioning = {
     type: 'SetupAmazonPayRequest',
     version: '2'
-}
+};
 
 const processPayloadVersioning = {
     type: 'ChargeAmazonPayRequest',
     version: '2'
-}
+};
 
-var setupPayload = function (language) {
-    console.log(language);
-    const regionalConfig = config.REGIONAL[language];
+var setupPayload = function( language ) {
+    console.log( language );
+    const regionalConfig = config.REGIONAL[ language ];
     const generalConfig = config.GENERAL;
     var payload = {
         '@type': setupPayloadVersioning.type,
@@ -41,10 +42,9 @@ var setupPayload = function (language) {
 
     return payload;
 };
+var chargePayload = function( billingAgreementId, authorizationReferenceId, sellerOrderId, amount, language ) {
 
-var chargePayload = function (billingAgreementId, authorizationReferenceId, sellerOrderId, amount, language) {
-
-    const regionalConfig = config.REGIONAL[language];
+    const regionalConfig = config.REGIONAL[ language ];
     const generalConfig = config.GENERAL;
     var payload = {
         '@type': processPayloadVersioning.type,
@@ -59,7 +59,7 @@ var chargePayload = function (billingAgreementId, authorizationReferenceId, sell
             'authorizationAmount': {
                 '@type': 'Price',
                 '@version': '2',
-                'amount': amount.toString(),
+                'amount': amount.toString( ),
                 'currencyCode': regionalConfig.ledgerCurrency
             },
             'transactionTimeout': generalConfig.transactionTimeout,
@@ -69,7 +69,7 @@ var chargePayload = function (billingAgreementId, authorizationReferenceId, sell
         'sellerOrderAttributes': {
             '@type': 'SellerOrderAttributes',
             '@version': '2',
- //           'sellerOrderId': sellerOrderId,
+            //           'sellerOrderId': sellerOrderId,
             'storeName': regionalConfig.sellerStoreName,
             'customInformation': regionalConfig.customInformation,
             'sellerNote': regionalConfig.sellerNote
