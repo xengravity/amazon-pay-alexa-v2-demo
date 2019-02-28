@@ -15,17 +15,17 @@ const GENERAL = {
     paymentAction:                      'AuthorizeAndCapture',                      // Required; 'Authorize' or 'AuthorizeAndCapture'
     transactionTimeout:                 0,                                          // Optional; The default value for Alexa transactions is 0
     platformId:                         undefined,                                  // Optional; Used for Solution Providers only
-    bucketName:                         'no-nicks'                                  // Required; Used for S3 state management
+    bucketName:                         ''                                          // Required; Used for S3 state management
 };
 
 const REGIONAL = {
     'en-US': {
-        sellerId:                       'AVX6ERM5QT1ZB',                            // Required; Amazon Pay seller ID 
+        sellerId:                       '',                                         // Required; Amazon Pay seller ID 
         checkoutLanguage:               'en_US',                                    // Optional; US must be en_US
         countryOfEstablishment:         'US',                                       // Required;
         ledgerCurrency:                 'USD',                                      // Required;
         sandboxMode:                    true,                                       // Optional; Must be false for certification || production; Must be true for sandbox testing
-        sandboxCustomerEmailId:         'tcordov+pay.sandbox.buyer.2@amazon.com',   // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
+        sandboxCustomerEmailId:         '',                                         // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
         sellerAuthorizationNote:        utilities.getSimulationString( '' ),        // Optional; Max 255 chars
         softDescriptor:                 '16charSoftDesc',                           // Optional; Max 16 chars
         amount:                         '0.01',                                     // Required; Max $150,000.00 USD
