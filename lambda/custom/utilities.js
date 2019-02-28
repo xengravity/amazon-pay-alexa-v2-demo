@@ -44,7 +44,7 @@ function generateRandomString( length ) {
     return randomString;
 }
 
-function getPermissionStatus( handlerInput ) {
+function handleMissingAmazonPayPermission( handlerInput ) {
 	const permissions 			= handlerInput.requestEnvelope.context.System.user.permissions;
     const amazonPayPermission 	= permissions.scopes[ config.scope ];
 
@@ -104,6 +104,6 @@ module.exports = {
     'generateRandomString': generateRandomString,
     'getSimulationString': 	getSimulationString,
 	'getSlotValues': 		getSlotValues,
-	'getPermissionStatus': 	getPermissionStatus
+	'handleMissingAmazonPayPermission': 	handleMissingAmazonPayPermission
 };
 

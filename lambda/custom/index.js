@@ -117,8 +117,8 @@ function AmazonPaySetup ( handlerInput, productType ) {
     attributes.productType          = productType;
     attributesManager.setSessionAttributes( attributes );
     
-    // Permission check - TODO confirm if needed since check exists in error handling
-    // utilities.getPermissionStatus( handlerInput );
+    // Permission check
+    utilities.handleMissingAmazonPayPermission( handlerInput );
 
     // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
     const token                     = utilities.generateRandomString( 12 );
@@ -136,8 +136,8 @@ function AmazonPaySetup ( handlerInput, productType ) {
 // Consumer has requested checkout and wants to be charged
 function AmazonPayCharge ( handlerInput ) {
 
-    // Permission check - TODO confirm if needed since check exists in error handling
-    // utilities.getPermissionStatus( handlerInput );
+    // Permission check
+    utilities.handleMissingAmazonPayPermission( handlerInput );
 
     // Get session attributes
     const { attributesManager }     = handlerInput;
