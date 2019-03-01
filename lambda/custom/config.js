@@ -14,18 +14,17 @@ const GENERAL = {
     needAmazonShippingAddress:          true,                                       // Optional; Must be boolean
     paymentAction:                      'AuthorizeAndCapture',                      // Required; 'Authorize' or 'AuthorizeAndCapture'
     transactionTimeout:                 0,                                          // Optional; The default value for Alexa transactions is 0
-    platformId:                         undefined,                                  // Optional; Used for Solution Providers only
-    bucketName:                         ''                                          // Required; Used for S3 state management
+    bucketName:                         'no-nicks'                                  // Required; Used for S3 state management
 };
 
 const REGIONAL = {
     'en-US': {
-        sellerId:                       '',                                         // Required; Amazon Pay seller ID 
+        sellerId:                       'AVX6ERM5QT1ZB',                            // Required; Amazon Pay seller ID 
         checkoutLanguage:               'en_US',                                    // Optional; US must be en_US
         countryOfEstablishment:         'US',                                       // Required;
         ledgerCurrency:                 'USD',                                      // Required;
         sandboxMode:                    true,                                       // Optional; Must be false for certification || production; Must be true for sandbox testing
-        sandboxCustomerEmailId:         '',                                         // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
+        sandboxCustomerEmailId:         'tcordov+pay.sandbox.buyer.2@amazon.com',   // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
         sellerAuthorizationNote:        utilities.getSimulationString( '' ),        // Optional; Max 255 chars
         softDescriptor:                 '16charSoftDesc',                           // Optional; Max 16 chars
         amount:                         '0.01',                                     // Required; Max $150,000.00 USD
@@ -99,10 +98,17 @@ const REGIONAL = {
 // HELP INTENT
     const helpCommandsIntentResponse       = 'To check order status, say where is my order. To cancel an order, say cancel order. To ask for a refund, say refund.';
 
-    // Fallback INTENT
-    const fallbackHelpMessage               = 'Hmm, I\'m not sure about that. ' + helpCommandsIntentResponse;
+// Fallback INTENT
+    const fallbackHelpMessage              = 'Hmm, I\'m not sure about that. ' + helpCommandsIntentResponse;
 
 
+    const products                         = Object.freeze( {
+                                                KIT:     'kit',
+                                                UPGRADE: 'upgrade',
+                                                REFILL:  'refill'
+                                            } );
+// EXITSKILL INTENT
+    const exitSkillResponse                 = 'OK, bye for now';
 /** 
     The following strings are used to output errors to test the skill
 **/
@@ -157,9 +163,13 @@ module.exports = {
 
     'fallbackHelpMessage':              fallbackHelpMessage,
 
+    'products':                         products,
+
     'orderTrackerTitle':                orderTrackerTitle,
     'orderTrackerIntentResponse':       orderTrackerIntentResponse,
     'orderTrackerCardResponse':         orderTrackerCardResponse,
+
+    'exitSkillResponse':                exitSkillResponse,
     
 	// ERROR RESPONSE STRINGS
     'enablePermission': 				enablePermission,

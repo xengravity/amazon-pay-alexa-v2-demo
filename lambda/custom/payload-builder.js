@@ -13,8 +13,8 @@ const processPayloadVersioning = {
 
 var setupPayload = function( language ) {
     console.log( language );
-    const regionalConfig = config.REGIONAL[ language ];
-    const generalConfig = config.GENERAL;
+    const regionalConfig    = config.REGIONAL[ language ];
+    const generalConfig     = config.GENERAL;
     var payload = {
         '@type': setupPayloadVersioning.type,
         '@version': setupPayloadVersioning.version,
@@ -44,8 +44,8 @@ var setupPayload = function( language ) {
 };
 var chargePayload = function( billingAgreementId, authorizationReferenceId, sellerOrderId, amount, language ) {
 
-    const regionalConfig = config.REGIONAL[ language ];
-    const generalConfig = config.GENERAL;
+    const regionalConfig    = config.REGIONAL[ language ];
+    const generalConfig     = config.GENERAL;
     var payload = {
         '@type': processPayloadVersioning.type,
         '@version': processPayloadVersioning.version,
@@ -78,8 +78,7 @@ var chargePayload = function( billingAgreementId, authorizationReferenceId, sell
     return payload;
 };
 
-
 module.exports = {
-    'setupPayload': setupPayload,
-    'chargePayload': chargePayload
+    'setupPayload':     setupPayload,
+    'chargePayload':    chargePayload
 };
