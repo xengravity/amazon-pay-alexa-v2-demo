@@ -1,14 +1,12 @@
 'use strict';
 
-const config = require( 'config' );
-
 /**
     A detailed list simulation strings to use in sandboxMode can be found here:
     https://pay.amazon.com/us/developer/documentation/lpwa/201956480#201956480
+
+    Used for testing simulation strings in sandbox mode
 **/
 
-
-// Used for testing simulation strings in sandbox mode
 function getSimulationString( type ) {
 	let simulationString = '';
 
@@ -33,7 +31,7 @@ function getSimulationString( type ) {
 	return simulationString;
 }
 
-// Sometimes you just need a random string right?
+// Sometimes you just need a random string, right?
 function generateRandomString( length ) {
     let randomString 	= '';
     const stringValues 	= 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -44,20 +42,7 @@ function generateRandomString( length ) {
     return randomString;
 }
 
-function handleMissingAmazonPayPermission( handlerInput ) {
-	const permissions 			= handlerInput.requestEnvelope.context.System.user.permissions;
-    const amazonPayPermission 	= permissions.scopes[ config.scope ];
-
-    if ( amazonPayPermission.status === 'DENIED' ) {
-        return handlerInput.responseBuilder
-                            .speak( config.enablePermission )
-                            .withAskForPermissionsConsentCard( [ config.scope ] )
-                            .getResponse();
-    }
-}
-
 // Get intent slot values
-// Original code from https://github.com/alexa/skill-sample-nodejs-decision-tree/blob/6683cf4d3836e4fc43c573dc0df4d3fd9b5945b5/lambda/custom/index.js#L282
 function getSlotValues( filledSlots ) {
 	const slotValues = {};
 
@@ -100,10 +85,20 @@ function getSlotValues( filledSlots ) {
 	return slotValues;
 }
 
+// Prevent a previous session's setup from being called prematurely 
+function resetSetup ( handlerInput ) {
+	const { attributesManager } 	= handlerInput;
+	let attributes                  = attributesManager.getSessionAttributes( );
+
+	attributes.setup                = false;
+	attributesManager.setSessionAttributes( attributes );  	
+}
+
 module.exports = {
-    'generateRandomString': generateRandomString,
-    'getSimulationString': 	getSimulationString,
-	'getSlotValues': 		getSlotValues,
-	'handleMissingAmazonPayPermission': 	handleMissingAmazonPayPermission
+    'generateRandomString': 			generateRandomString,
+    'getSimulationString': 				getSimulationString,
+	'getSlotValues': 					getSlotValues,
+	'resetSetup': 						resetSetup,
+
 };
 
