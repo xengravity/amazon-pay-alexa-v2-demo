@@ -15,19 +15,19 @@ const GENERAL = {
     needAmazonShippingAddress:          true,                                       // Optional; Must be boolean
     paymentAction:                      'AuthorizeAndCapture',                      // Required; 'Authorize' or 'AuthorizeAndCapture'
     transactionTimeout:                 0,                                          // Optional; The default value for Alexa transactions is 0
-    bucketName:                         'no-nicks'                                  // Required; Used for S3 state management
+    bucketName:                         'INSERT-YOUR-S3-BUCKET-NAME'                // Required; Used for S3 state management
 };
 
 const REGIONAL = {
     'en-US': {
-        sellerId:                       'AVX6ERM5QT1ZB',                            // Required; Amazon Pay seller ID 
+        sellerId:                       'INSERT-YOUR-AMAZON-PAY-SELLER-ID',         // Required; Amazon Pay seller ID 
         checkoutLanguage:               'en_US',                                    // Optional; US must be en_US
         countryOfEstablishment:         'US',                                       // Required;
         ledgerCurrency:                 'USD',                                      // Required;
         sandboxMode:                    true,                                       // Optional; Must be false for certification || production; Must be true for sandbox testing
-        sandboxCustomerEmailId:         'tcordov+pay.sandbox.buyer.2@amazon.com',   // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
+        sandboxCustomerEmailId:         'INSERT-YOUR-SANDBOX-EMAIL-ADDRESS',        // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
         sellerAuthorizationNote:        utilities.getSimulationString( '' ),        // Optional; Max 255 chars
-        softDescriptor:                 '16charSoftDesc',                           // Optional; Max 16 chars
+        softDescriptor:                 '',                                         // Optional; Max 16 chars
         amount:                         '0.01',                                     // Required; Max $150,000.00 USD
         currencyCode:                   'USD',                                      // Required;
 
