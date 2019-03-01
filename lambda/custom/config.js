@@ -7,7 +7,7 @@
 
 'use strict';
 
-//const utilities = require( 'utilities' );
+const utilities = require( 'utilities' );
 
 // Setup & Charge Payload attributes
 const GENERAL = {
@@ -26,7 +26,7 @@ const REGIONAL = {
         ledgerCurrency:                 'USD',                                      // Required;
         sandboxMode:                    true,                                       // Optional; Must be false for certification || production; Must be true for sandbox testing
         sandboxCustomerEmailId:         'tcordov+pay.sandbox.buyer.2@amazon.com',   // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
-        sellerAuthorizationNote:        'test',//utilities.getSimulationString( '' ),        // Optional; Max 255 chars
+        sellerAuthorizationNote:        utilities.getSimulationString( '' ),        // Optional; Max 255 chars
         softDescriptor:                 '16charSoftDesc',                           // Optional; Max 16 chars
         amount:                         '0.01',                                     // Required; Max $150,000.00 USD
         currencyCode:                   'USD',                                      // Required;

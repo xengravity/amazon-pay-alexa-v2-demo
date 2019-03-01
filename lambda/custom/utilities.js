@@ -6,6 +6,7 @@
 
     Used for testing simulation strings in sandbox mode
 **/
+
 function getSimulationString( type ) {
 	let simulationString = '';
 
@@ -42,7 +43,6 @@ function generateRandomString( length ) {
 }
 
 // Get intent slot values
-// Original code from https://github.com/alexa/skill-sample-nodejs-decision-tree/blob/6683cf4d3836e4fc43c573dc0df4d3fd9b5945b5/lambda/custom/index.js#L282
 function getSlotValues( filledSlots ) {
 	const slotValues = {};
 

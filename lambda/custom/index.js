@@ -13,11 +13,11 @@ const directiveBuilder  = require( 'directive-builder' );
 const payloadBuilder    = require( 'payload-builder' );
 const s3Adapter         = require( 'ask-sdk-s3-persistence-adapter' ).S3PersistenceAdapter;
 let persistence         = '';
-const products          = Object.freeze( {
-                            KIT:     'kit',
-                            UPGRADE: 'upgrade',
-                            REFILL:  'refill'
-                            });
+const products          = Object.freeze({
+                                            KIT:     'kit',
+                                            UPGRADE: 'upgrade',
+                                            REFILL:  'refill'
+                                        });
 
 // Welcome, are you interested in a starter kit or a refill subscription?
 const LaunchRequestHandler = {
@@ -96,7 +96,7 @@ const InProgressStarterKitIntent = {
     }
 };
 
-// I want to buy a refill subscription or buy something else?
+// Do you want to buy a refill subscription or buy something else?
 const CompletedRefillIntentHandler = {
     canHandle( handlerInput ) {
         const request = handlerInput.requestEnvelope.request;
@@ -163,7 +163,7 @@ const YesIntentHandler = {
             // This is added with the intent that it is developer facing only
             // Do not leave this here for production skills as customers will recieve these messages
             return handlerInput.responseBuilder
-                                .speak( 'Check the yes intent handler' )
+                                .speak( 'Error: Check the yes intent handler' )
                                 .withShouldEndSession( false )
                                 .getResponse( );
         }
@@ -569,7 +569,10 @@ function generateResponse ( stage, template, productType, shippingAddress ) {
 
         default:
             console.log( 'Setup Error with productType' );
-            cartSummaryResponse     = 'Uh oh, there is an error in the product type in setup.';
+
+            // This is added with the intent that it is developer facing only
+            // Do not leave this here for production skills as customers will recieve these messages            
+            cartSummaryResponse     = 'Error Setup with productType';
             break;
     }
 
