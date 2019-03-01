@@ -10,7 +10,7 @@
         },
         "interactionModel": {
           "en-US": {
-            "eTag": "aea73d7dbc3c4667ed41406a4ed43cd7"
+            "eTag": "f724639bcb8534bf7c24126b8b439ec6"
           }
         },
         "lambda": [
@@ -23,7 +23,7 @@
             "codeUri": "lambda/custom",
             "functionName": "no-nicks",
             "handler": "index.handler",
-            "revisionId": "a38eb494-f9c5-4b2c-96eb-776492ad9cf2",
+            "revisionId": "65096edf-3c40-49b5-8565-f96bb2f6fe1a",
             "runtime": "nodejs8.10"
           }
         ]

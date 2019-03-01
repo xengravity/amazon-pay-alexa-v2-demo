@@ -13,6 +13,11 @@ const directiveBuilder  = require( 'directive-builder' );
 const payloadBuilder    = require( 'payload-builder' );
 const s3Adapter         = require( 'ask-sdk-s3-persistence-adapter' ).S3PersistenceAdapter;
 let persistence         = '';
+const products          = Object.freeze( {
+                            KIT:     'kit',
+                            UPGRADE: 'upgrade',
+                            REFILL:  'refill'
+                            });
 
 // Welcome, are you interested in a starter kit or a refill subscription?
 const LaunchRequestHandler = {
@@ -69,18 +74,18 @@ const InProgressStarterKitIntent = {
 
                     // No, I do not want to upgrade, just buy the starter kit
                     if ( currentSlot.name === 'UpgradeKitIntentSlot' && currentSlotValue === 'no' ) {
-                        return utilities.amazonPaySetup( handlerInput, config.products.KIT );
+                        return amazonPaySetup( handlerInput, products.KIT );
                     }
 
                     // Yes, I do want to upgrade the starter kit
                     if ( currentSlot.name === 'UpgradeKitIntentSlot' && currentSlotValue === 'yes' ) {
-                        return utilities.amazonPaySetup( handlerInput, config.products.UPGRADE );                  
+                        return amazonPaySetup( handlerInput, products.UPGRADE );                  
                     }
 
                     // TODO: Combine refill subscription logic here
 
                 } else {
-                    console.log( 'Error: Had no match for config.products' );
+                    console.log( 'Error: Had no match for products' );
                 }
             } 
         }
@@ -121,7 +126,7 @@ const CompletedRefillIntentHandler = {
                                 .getResponse();
         } else {
             // Yes, I want to buy the refill subscription
-            return utilities.amazonPaySetup( handlerInput, config.products.REFILL );  
+            return amazonPaySetup( handlerInput, products.REFILL );  
         }
     }
 };
@@ -150,14 +155,13 @@ const YesIntentHandler = {
 
         // Did we already send the setup directive request?
         if ( setupDirectiveSent ) {
-            config.resetSetup( handlerInput );
+            utilities.resetSetup( handlerInput );
 
             // Charge the user
-            return utilities.amazonPayCharge( handlerInput );
+            return amazonPayCharge( handlerInput );
         } else {
             // This is added with the intent that it is developer facing only
             // Do not leave this here for production skills as customers will recieve these messages
-            console.log( error.debug( handlerInput, 'YesIntentHandler error' ) );
             return handlerInput.responseBuilder
                                 .speak( 'Check the yes intent handler' )
                                 .withShouldEndSession( false )
@@ -230,9 +234,9 @@ const SetupConnectionsResponseHandler = {
             attributesManager.setSessionAttributes( attributes );                      
 
             const shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
-            let productType                 = attributes.productType;
-            let cartSummaryResponse         = utilities.getResponse( 'summary', config.cartSummaryResponse, productType, shippingAddress );
 
+            let productType                 = attributes.productType;
+            let cartSummaryResponse         = generateResponse( 'summary', config.cartSummaryResponse, productType, shippingAddress );
             return handlerInput.responseBuilder
                                 .speak( cartSummaryResponse )
                                 .withShouldEndSession( false )
@@ -275,7 +279,7 @@ const ChargeConnectionsResponseHandler = {
             const { attributesManager }     = handlerInput;
             let attributes                  = attributesManager.getSessionAttributes( );             
             const productType               = attributes.productType;
-            let confirmationCardResponse    = config.getResponse( 'confirmation', config.confirmationCardResponse, productType, null );
+            let confirmationCardResponse    = generateResponse( 'confirmation', config.confirmationCardResponse, productType, null );
 
             return handlerInput.responseBuilder
                                 .speak( config.confirmationIntentResponse )
@@ -398,7 +402,6 @@ const ErrorHandler = {
     handle( handlerInput, error ) {
         // This is added with the intent that it is developer facing only
         // Do not leave this here for production skills as customers will recieve these messages
-        console.log( error.debug( handlerInput, 'Log from ErrorHandler' ) );
         const speechText = config.errorUnknown + ' ' + error.message;
 
         return handlerInput.responseBuilder
@@ -456,6 +459,143 @@ const PersistenceResponseInterceptor = {
         }
     }
 };
+
+
+// Customer has shown intent to purchase, call Setup to grab the customers shipping address details
+function amazonPaySetup ( handlerInput, productType ) {
+
+    // Save session attributes because skill connection directives will close the session
+    const { attributesManager }     = handlerInput;
+    let attributes                  = attributesManager.getSessionAttributes( );
+
+    attributes.productType          = productType;
+    attributesManager.setSessionAttributes( attributes );
+    
+    //Permission check
+    handleMissingAmazonPayPermission( handlerInput );
+
+    const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
+    const amazonPayPermission   = permissions.scopes[ config.scope ];
+
+    if ( amazonPayPermission.status === 'DENIED' ) {
+        return handlerInput.responseBuilder
+                            .speak( config.enablePermission )
+                            .withAskForPermissionsConsentCard( [ config.scope ] )
+                            .getResponse();
+    } 
+
+    var foo = handlerInput.requestEnvelope.request.locale ;
+
+    // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
+    const token                     = utilities.generateRandomString( 12 );
+
+    // If you do not have a billing agreement, set the Setup payload and send the request directive
+    const setupPayload              = payloadBuilder.setupPayload( handlerInput.requestEnvelope.request.locale );
+    const setupRequestDirective     = directiveBuilder.createSetupDirective( setupPayload, token );
+
+    
+    return handlerInput.responseBuilder
+                        .addDirective( setupRequestDirective )
+                        .withShouldEndSession( true )
+                        .getResponse( ); 
+}
+
+// Customer has requested checkout and wants to be charged
+function amazonPayCharge ( handlerInput ) {
+
+    // Permission check
+    handleMissingAmazonPayPermission( handlerInput );
+    const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
+    const amazonPayPermission   = permissions.scopes[ config.scope ];
+
+    if ( amazonPayPermission.status === 'DENIED' ) {
+        return handlerInput.responseBuilder
+                            .speak( config.enablePermission )
+                            .withAskForPermissionsConsentCard( [ config.scope ] )
+                            .getResponse();
+    }    
+
+    // Get session attributes
+    const { attributesManager }     = handlerInput;
+    let attributes                  = attributesManager.getSessionAttributes( );
+    const billingAgreementId        = attributes.billingAgreementId;
+    const authorizationReferenceId  = utilities.generateRandomString( 16 );
+    const sellerOrderId             = utilities.generateRandomString( 6 );
+    const locale                    = handlerInput.requestEnvelope.request.locale;
+    const token                     = utilities.generateRandomString( 12 );    
+    const amount                    = config.REGIONAL[locale].amount;
+    
+    // Set the Charge payload and send the request directive
+    const chargePayload             = payloadBuilder.chargePayload(billingAgreementId, authorizationReferenceId, sellerOrderId, amount, locale);
+    const chargeRequestDirective    = directiveBuilder.createChargeDirective(chargePayload, token);
+
+    return handlerInput.responseBuilder
+                        .addDirective( chargeRequestDirective )
+                        .withShouldEndSession( true )
+                        .getResponse( );
+}
+
+// Returns product specific string for summary or checkout intent responses
+function generateResponse ( stage, template, productType, shippingAddress ) {
+    let productPrice                = '';
+    let subscriptionPrice           = '';
+    let cartSummaryResponse         = template;
+    let cartSummarySubscription     = config.cartSummarySubscription;
+    let confirmationCardResponse    = template;
+    let confirmationItem            = '';     
+
+    switch ( productType ) {
+        case products.KIT:
+            productType             = 'Starter Kit';
+            confirmationItem        = 'Starter Kit';
+            productPrice            = 9;
+            cartSummarySubscription = '';
+            break;
+
+        case products.REFILL:
+            confirmationItem        = 'Refill Subscription';   
+            productPrice            = 20;
+            subscriptionPrice       = 20;
+            cartSummarySubscription = cartSummarySubscription.replace( '{subscriptionPrice}', subscriptionPrice );
+            break;
+
+        case products.UPGRADE:
+            productType             = 'Starter Kit';
+            confirmationItem        = 'Starter Kit + Refill Subscription';  
+            productPrice            = 9;
+            subscriptionPrice       = 18;
+            cartSummarySubscription = cartSummarySubscription.replace( '{subscriptionPrice}', subscriptionPrice );
+            break;
+
+        default:
+            console.log( 'Setup Error with productType' );
+            cartSummaryResponse     = 'Uh oh, there is an error in the product type in setup.';
+            break;
+    }
+
+    cartSummaryResponse      = cartSummaryResponse.replace( '{productType}', productType ).replace( '{productPrice}', productPrice ).replace( '{shippingAddress}', shippingAddress );
+    cartSummaryResponse      += cartSummarySubscription + config.cartSummaryCheckout;
+
+    confirmationCardResponse = confirmationCardResponse.replace( '{productType}' , confirmationItem ).replace( '{productPrice}' , productPrice );
+
+    if ( stage === 'summary' ) {
+        return cartSummaryResponse;
+    } else if ( stage === 'confirmation') {
+        return confirmationCardResponse;
+    }
+}
+
+function handleMissingAmazonPayPermission( handlerInput ) {
+    const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
+    const amazonPayPermission   = permissions.scopes[ config.scope ];
+
+    if ( amazonPayPermission.status === 'DENIED' ) {
+        return handlerInput.responseBuilder
+                            .speak( config.enablePermission )
+                            .withAskForPermissionsConsentCard( [ config.scope ] )
+                            .getResponse();
+    }
+}
 
 exports.handler = askSDK.SkillBuilders
 						.custom( )

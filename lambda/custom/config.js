@@ -1,7 +1,3 @@
-'use strict';
-
-const utilities = require( 'utilities' );
-
 /**
     To run the skill, the minimum values you need configure are: sellerId, sandboxCustomerEmailId, and bucketName
 
@@ -9,6 +5,11 @@ const utilities = require( 'utilities' );
     https://developer.integ.amazon.com/docs/amazon-pay/amazon-pay-apis-for-alexa.html    
 **/
 
+'use strict';
+
+//const utilities = require( 'utilities' );
+
+// Setup & Charge Payload attributes
 const GENERAL = {
     VERSION:                            '2.0',                                      // Required; 
     needAmazonShippingAddress:          true,                                       // Optional; Must be boolean
@@ -25,7 +26,7 @@ const REGIONAL = {
         ledgerCurrency:                 'USD',                                      // Required;
         sandboxMode:                    true,                                       // Optional; Must be false for certification || production; Must be true for sandbox testing
         sandboxCustomerEmailId:         'tcordov+pay.sandbox.buyer.2@amazon.com',   // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
-        sellerAuthorizationNote:        utilities.getSimulationString( '' ),        // Optional; Max 255 chars
+        sellerAuthorizationNote:        'test',//utilities.getSimulationString( '' ),        // Optional; Max 255 chars
         softDescriptor:                 '16charSoftDesc',                           // Optional; Max 16 chars
         amount:                         '0.01',                                     // Required; Max $150,000.00 USD
         currencyCode:                   'USD',                                      // Required;
@@ -101,14 +102,9 @@ const REGIONAL = {
 // Fallback INTENT
     const fallbackHelpMessage              = 'Hmm, I\'m not sure about that. ' + helpCommandsIntentResponse;
 
-
-    const products                         = Object.freeze( {
-                                                KIT:     'kit',
-                                                UPGRADE: 'upgrade',
-                                                REFILL:  'refill'
-                                            } );
 // EXITSKILL INTENT
     const exitSkillResponse                 = 'OK, bye for now';
+
 /** 
     The following strings are used to output errors to test the skill
 **/
@@ -162,8 +158,6 @@ module.exports = {
     'helpCommandsIntentResponse':       helpCommandsIntentResponse,
 
     'fallbackHelpMessage':              fallbackHelpMessage,
-
-    'products':                         products,
 
     'orderTrackerTitle':                orderTrackerTitle,
     'orderTrackerIntentResponse':       orderTrackerIntentResponse,
