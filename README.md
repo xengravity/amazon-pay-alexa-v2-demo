@@ -15,7 +15,7 @@ This folder contains the interaction model and skill code.  It is structured to 
 
 1. Clone repository and navigate the demo's root folder (with the skill.json file).
 1. Open [config.js](./lambda/custom/config.js) and update values `bucketName`, `sellerId`, and `sandboxCustomerEmailId`
-   * the `bucketName` is your S3 instance.
+   * the `bucketName` is your [S3](https://aws.amazon.com/s3/) instance.
    * the `sellerId` is your Seller Id.  You can find that [here](https://sellercentral.amazon.com/hz/me/integration/details)
    * the `sandboxCustomerEmailId` is the email address of the test account you created or otherwise have access to.  This is not an account usable on the www.amazon.com website.
 1. Give your skill permission to use your Amazon Pay account.  You can do that [here](https://sellercentral.amazon.com/external-payments/integration/alexa/).  The documentation is [here](https://developer.amazon.com/docs/amazon-pay/integrate-skill-with-amazon-pay-v2.html#link_sc)..
@@ -26,8 +26,6 @@ If you would like to explore the skill, the areas to pay attention to are the Am
 
 ## Running the Demo
 Launch the demo by saying, 'Alexa, open No Nicks'. If you receive an error, proceed to the [troubleshooting section](#troubleshooting).
-
-You will get a payment record in your email and your Alexa app home screen.
 
 ## Next Steps
 Read the integration guide: https://developer.amazon.com/docs/amazon-pay/amazon-pay-overview.html
