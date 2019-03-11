@@ -50,11 +50,6 @@ const REGIONAL = {
     const storeURL                         = 'www.nonicks.com';
     const logoURL                          = 'https://s3-us-west-2.amazonaws.com/tcordov/no-nicks-logo-512.png';
 
-// LAUNCH INTENT
-    const launchRequestWelcomeTitle        = 'Welcome to '+ REGIONAL[ 'en-US' ].sellerStoreName +'. '; 
-	const launchRequestWelcomeResponse     = launchRequestWelcomeTitle +'We have everything you need for the perfect shave.';
-	const launchRequestQuestionResponse    = 'Are you interested in a starter kit, or refills?';
-
 // NO INTENT
     const noIntentResponse 				   = 'Okay. Do you want to order something else?';
 
@@ -129,10 +124,6 @@ module.exports = {
     'REGIONAL': REGIONAL,
 
     // INTENT RESPONSE STRINGS
-    'launchRequestWelcomeTitle':        launchRequestWelcomeTitle,
-    'launchRequestWelcomeResponse':    	launchRequestWelcomeResponse,
-    'launchRequestQuestionResponse':   	launchRequestQuestionResponse,
-
     'noIntentResponse': 				noIntentResponse,
 
     'confirmationTitle':                confirmationTitle,

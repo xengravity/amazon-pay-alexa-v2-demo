@@ -5,7 +5,9 @@
 
 'use strict';
 
-const askSDK            = require( 'ask-sdk-core' );
+const Alexa            = require( 'ask-sdk-core' );
+const Jargon = require('@jargon/alexa-skill-sdk');
+const ri = Jargon.ri;
 const config            = require( 'config' );
 const error             = require( 'error-handler' );
 const utilities         = require( 'utilities' );
@@ -28,10 +30,17 @@ const LaunchRequestHandler = {
         // Prevent a previous session's setup from being called prematurely 
         utilities.resetSetup( handlerInput );
 
-        return handlerInput.responseBuilder
-                            .speak( config.launchRequestWelcomeResponse + ' ' + config.launchRequestQuestionResponse )
-                            .withStandardCard( config.launchRequestWelcomeTitle, config.storeURL, config.logoURL )
-				            .reprompt( config.launchRequestQuestionResponse )
+        const storeName = ri('storeName');
+        const welcomeTitle = ri('welcome.title', {storeName: storeName});
+        const welcomeResponse = ri('welcome.response');
+        const welcomeQuestion = ri('welcome.question');
+
+        return handlerInput.jrb
+                            .speak(welcomeTitle)
+                            .speak(welcomeResponse)
+                            .speak(welcomeQuestion)
+                            .withStandardCard(welcomeTitle, config.storeURL, config.logoURL)
+                            .reprompt(welcomeQuestion)
                             .withShouldEndSession( false )
 				            .getResponse( );
     }
@@ -600,8 +609,8 @@ function handleMissingAmazonPayPermission( handlerInput ) {
     }
 }
 
-exports.handler = askSDK.SkillBuilders
-						.custom( )
+const skillBuilder = new Jargon.JargonSkillBuilder({mergeSpeakAndReprompt : true}).installOnto(Alexa.SkillBuilders.custom());
+exports.handler = skillBuilder
 						.addRequestHandlers(
 							LaunchRequestHandler,
                             InProgressStarterKitIntent,

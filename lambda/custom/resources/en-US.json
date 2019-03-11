@@ -1,0 +1,8 @@
+{
+    "storeName": "No Nicks",
+    "welcome": {
+        "title" : "Welcome to {storeName}.",
+        "response": "We have everything you need for the perfect shave.",
+        "question": "Are you interested in a starter kit, or refills?"
+    }
+}
