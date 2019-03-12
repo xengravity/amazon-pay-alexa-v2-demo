@@ -15,17 +15,17 @@ const GENERAL = {
     paymentAction:                      'AuthorizeAndCapture',                      // Required; 'Authorize' or 'AuthorizeAndCapture'
     transactionTimeout:                 0,                                          // Optional; The default value for Alexa transactions is 0
     scope:                              'payments:autopay_consent',                 // Required; Used request permissions for Amazon Pay
-    bucketName:                         'INSERT-YOUR-S3-BUCKET-NAME'                // Required; Used for S3 state management
+    bucketName:                         'no-nicks-daneu'                            // Required; Used for S3 state management
 };
 
 const REGIONAL = {
     'en-US': {
-        sellerId:                       'INSERT-YOUR-AMAZON-PAY-SELLER-ID',                           // Required; Amazon Pay seller ID 
+        sellerId:                       'A3HPHFDCJJZ55Q',                           // Required; Amazon Pay seller ID 
         checkoutLanguage:               'en_US',                                    // Optional; US must be en_US
         countryOfEstablishment:         'US',                                       // Required;
         ledgerCurrency:                 'USD',                                      // Required;
         sandboxMode:                    true,                                       // Optional; Must be false for certification || production; Must be true for sandbox testing
-        sandboxCustomerEmailId:         'INSERT-YOUR-SANDBOX-EMAIL-ADDRESS',        // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
+        sandboxCustomerEmailId:         'daneu+lwa3@amazon.lu',                     // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
         sellerAuthorizationNote:        utilities.getSimulationString( '' ),        // Optional; Max 255 chars
         softDescriptor:                 'No Nicks',                                 // Optional; Please provide a meaningful value, this is visibla on the buyers' statements. Max 16 chars.
         amount:                         '0.01',                                     // Required; Max $150,000.00 USD

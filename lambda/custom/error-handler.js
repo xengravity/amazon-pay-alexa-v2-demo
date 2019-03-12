@@ -3,7 +3,7 @@
 const config = require( 'config' );
 const Jargon = require('@jargon/alexa-skill-sdk');
 const ri = Jargon.ri;
-const stringify = require('json-stringify-safe');
+const utilities         = require( 'utilities' );
 
 /**
 	A detailed list of all payment declines and processing errors can be found here:
@@ -60,7 +60,7 @@ function handleErrors( handlerInput ) {
 			break;
 	}
 
-	debug( handlerInput );
+	utilities.debug( handlerInput );
 
 	// If it is a permissions error send a permission consent card to the user, otherwise .speak() error to resolve during testing
 	if ( permissionsError ) {
@@ -90,7 +90,7 @@ function handleBillingAgreementState( billingAgreementStatus, handlerInput ) {
 			errorMessage = ri( "error.unknown", {errorMessage: ""} );
 	}
 
-	debug( handlerInput );
+	utilities.debug( handlerInput );
 
 	return handlerInput.responseBuilder
 		.speak( errorMessage )
@@ -113,21 +113,16 @@ function handleAuthorizationDeclines( authorizationStatusReasonCode, handlerInpu
 			errorMessage = ri( "error.unknown", {errorMessage: ""} );
 	}
 
-	debug( handlerInput );
+	utilities.debug( handlerInput );
 	
 	return handlerInput.responseBuilder
 		.speak( errorMessage )
 		.getResponse( );	
 }
 
-// Output object to console for debugging purposes
-function debug( handlerInput, message ) {
-	console.log( "debug" + ' ' + message + stringify( handlerInput ) );
-}
 
 module.exports = {
     'handleErrors': 					handleErrors,
     'handleBillingAgreementState': 		handleBillingAgreementState,
-    'handleAuthorizationDeclines': 		handleAuthorizationDeclines,
-    'debug': 							debug
+    'handleAuthorizationDeclines': 		handleAuthorizationDeclines
 };

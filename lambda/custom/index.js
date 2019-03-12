@@ -29,7 +29,6 @@ const LaunchRequestHandler = {
         return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
     },
     handle( handlerInput ) {
-        console.log(`Intent input: ${stringify(handlerInput)}`);
         // Prevent a previous session's setup from being called prematurely 
         utilities.resetSetup( handlerInput );
 
@@ -100,7 +99,7 @@ const InProgressStarterKitIntent = {
                     // TODO: Combine refill subscription logic here
 
                 } else {
-                    console.log( 'Error: Had no match for products' );
+                    utilities.debug( 'Error: Had no match for products' );
                 }
             } 
         }
@@ -161,9 +160,9 @@ const YesIntentHandler = {
             attributes.reengage     = false;
             attributesManager.setSessionAttributes( attributes );
 
-            return handlerInput.responseBuilder
-                                .speak( config.launchRequestQuestionResponse )
-                                .reprompt( config.launchRequestQuestionResponse )
+            return handlerInput.jrb
+                                .speak( ri( "welcome.question" ) )
+                                .reprompt( ri( "welcome.question" ) )
                                 .withShouldEndSession( false )
                                 .getResponse( );
         }
@@ -254,7 +253,7 @@ const SetupConnectionsResponseHandler = {
             }
 
             let productType                 = attributes.productType;
-            const product = findProductRepresentation( productType, shippingAddress);
+            const product = utilities.findProductRepresentation( productType, shippingAddress);
 
             return handlerInput.jrb
                                 .speak( product.intentResponse )
@@ -302,7 +301,7 @@ const ChargeConnectionsResponseHandler = {
             const cardTitle = ri( "confirmation.card.title" );
             const storeName = ri ( "store.name" );
             const storeURL = ri( "store.websiteURL" );
-            const product = findProductRepresentation( productType );
+            const product = utilities.findProductRepresentation( productType );
 
             const locale                    = handlerInput.requestEnvelope.request.locale;
 
@@ -323,69 +322,6 @@ const ChargeConnectionsResponseHandler = {
         }
     }
 };
-
-function findProductRepresentation( productType, shippingAddress ){
-    var product = {
-        productPrice: null,
-        subscriptionPrice: null,
-        voiceRepresenation: null,
-        intentResponse: null
-    };
-    const storeName = ri( "store.name" );
-    const checkoutQuestion = ri( "summary.checkoutQuestion" );
-    switch ( productType ) {
-        case products.KIT:
-            product.productPrice = 9;
-            product.voiceRepresenation = ri( "products.starterKit" );
-            product.intentResponse = ri ( "summary.cartDetails", {
-                sellerStoreName: storeName,
-                productType: product.voiceRepresenation,
-                productPrice: product.productPrice,
-                shippingAddress: shippingAddress,
-                subscriptionDetails: "",
-                checkoutQuestion: checkoutQuestion
-            } )
-            break;
-
-        case products.REFILL:
-            product.productPrice = 20;
-            product.subscriptionPrice = 20;
-            product.voiceRepresenation = ri( "products.refill" );
-            const subscriptionDetails = ri( "summary.subscriptionDetails", {
-                subscriptionPrice: product.subscriptionPrice
-            } );
-            product.intentResponse = ri ( "summary.cartDetails", {
-                sellerStoreName: storeName,
-                productType: product.voiceRepresenation,
-                productPrice: product.productPrice,
-                shippingAddress: shippingAddress,
-                subscriptionDetails: subscriptionDetails,
-                checkoutQuestion: checkoutQuestion
-            } );
-            break;
-
-        case products.UPGRADE:
-            product.productPrice = 9;
-            product.subscriptionPrice = 18;
-            product.voiceRepresenation = ri( "products.upgrade" );
-            const subscriptionDetails = ri( "summary.subscriptionDetails", {
-                subscriptionPrice: product.subscriptionPrice
-            } );
-            product.intentResponse = ri ( "summary.cartDetails", {
-                sellerStoreName: storeName,
-                productType: product.voiceRepresenation,
-                productPrice: product.productPrice,
-                shippingAddress: shippingAddress,
-                subscriptionDetails: subscriptionDetails,
-                checkoutQuestion: checkoutQuestion
-            } );
-            break;
-
-        default:
-            console.log( 'Setup Error with productType' );
-    }
-    return product;
-}
 
 // CERTIFICATION REQUIREMENT
 // Tell the customer how they can request a refund
@@ -595,8 +531,7 @@ function amazonPaySetup ( handlerInput, productType ) {
     attributesManager.setSessionAttributes( attributes );
     
     //Permission check
-    console.log("permission check");
-    handleMissingAmazonPayPermission( handlerInput );
+    utilities.handleMissingAmazonPayPermission( handlerInput );
 
     // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
     const token                     = utilities.generateRandomString( 12 );
@@ -617,7 +552,7 @@ function amazonPaySetup ( handlerInput, productType ) {
 function amazonPayCharge ( handlerInput ) {
 
     // Permission check
-    handleMissingAmazonPayPermission( handlerInput );
+    utilities.handleMissingAmazonPayPermission( handlerInput );
     const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
     const amazonPayPermission   = permissions.scopes[ config.GENERAL.scope ];
 
@@ -646,20 +581,6 @@ function amazonPayCharge ( handlerInput ) {
                         .addDirective( chargeRequestDirective )
                         .withShouldEndSession( true )
                         .getResponse( );
-}
-
-function handleMissingAmazonPayPermission( handlerInput ) {
-    const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
-    const amazonPayPermission   = permissions.scopes[ config.GENERAL.scope ];
-
-    if ( amazonPayPermission.status === 'DENIED' ) {
-        console.log("handling missing pay permission in handleMissingAmazonPayPermission");
-        return handlerInput.jrb
-                            .speak( ri( 'enablePermission' ) )
-                            .withAskForPermissionsConsentCard( [ config.GENERAL.scope ] )
-                            .withShouldEndSession( true )
-                            .getResponse();
-    }
 }
 
 const skillBuilder = new Jargon.JargonSkillBuilder({mergeSpeakAndReprompt : true}).installOnto(Alexa.SkillBuilders.custom());
