@@ -22,7 +22,7 @@
         },
         "card": {
             "title": "Refund Order Details",
-            "content": "Want to change or cancel your order? Contact us at {storePhoneNumber} or email {storeEmail}."
+            "content": "Not completely happy with your order? We are here to help.\n To request a refund, contact us at {storePhoneNumber} or email {storeEmail}."
         }
     },
     "cancel": {
@@ -31,7 +31,7 @@
         },
         "card": {
             "title": "Cancel Order Details",
-            "content": "Not completely happy with your order? We are here to help.\n To request a refund, contact us at {storePhoneNumber} or email {storeEmail}."
+            "content": "Want to change or cancel your order? Contact us at {storePhoneNumber} or email {storeEmail}."
         }
     },
     "help": {
