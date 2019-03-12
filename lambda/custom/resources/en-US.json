@@ -70,5 +70,11 @@
     },
     "exitSkill": "OK, bye for now.",
     "noIntentToBuyResponse": "Okay. Do you want to order something else?",
-    "enablePermission": "To make purchases in this skill, you need to enable Amazon Pay and turn on voice purchasing. To help, I sent a card to your Alexa app."
+    "enablePermission": "To make purchases in this skill, you need to enable Amazon Pay and turn on voice purchasing. To help, I sent a card to your Alexa app.",
+    "error": {
+        "message": "Merchant error occurred. Status code: {statusCode}, Status message: {statusMessage}. Payload message: {payloadMessage}",
+        "unknown": "Unknown error occurred. {errorMessage}",
+        "billingAgreement": "Billing agreement state is {agreementState}. Reach out to the user to resolve this issue.",
+        "authorizationDeclineMessage": "Your order was not placed and you have not been charged."
+    }
 }

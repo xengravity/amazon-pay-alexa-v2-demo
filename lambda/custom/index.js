@@ -39,11 +39,13 @@ const LaunchRequestHandler = {
         const welcomeResponse = ri('welcome.response');
         const welcomeQuestion = ri('welcome.question');
 
+        const locale                    = handlerInput.requestEnvelope.request.locale;
+
         return handlerInput.jrb
                             .speak( welcomeTitle )
                             .speak( welcomeResponse )
                             .speak( welcomeQuestion )
-                            .withStandardCard( welcomeTitle, storeURL, config.storeLogoURL )
+                            .withStandardCard( welcomeTitle, storeURL, config.REGIONAL[locale].storeLogoURL )
                             .reprompt( welcomeQuestion )
                             .withShouldEndSession( false )
 				            .getResponse( );
@@ -302,6 +304,8 @@ const ChargeConnectionsResponseHandler = {
             const storeURL = ri( "store.websiteURL" );
             const product = findProductRepresentation( productType );
 
+            const locale                    = handlerInput.requestEnvelope.request.locale;
+
             const cardContent = ri( "confirmation.card.content", { 
                 productType: product.voiceRepresenation, 
                 productPrice: product.productPrice, 
@@ -313,7 +317,7 @@ const ChargeConnectionsResponseHandler = {
 
             return handlerInput.jrb
                                 .speak( intentResponse )
-                                .withStandardCard( cardTitle, cardContent, config.storeLogoURL )
+                                .withStandardCard( cardTitle, cardContent, config.REGIONAL[locale].storeLogoURL )
                                 .withShouldEndSession( true )
                                 .getResponse( );
         }
@@ -366,9 +370,11 @@ const RefundOrderIntentHandler = {
         const emailPhonetic = ri( "store.emailPhonetic" );
         const intentResponse = ri( "refund.intent.response", {storeEmailPhonetic: emailPhonetic} );
 
+        const locale                    = handlerInput.requestEnvelope.request.locale;
+
         return handlerInput.jrb
                             .speak( intentResponse )
-                            .withStandardCard( cardTitle, cardContent, config.storeLogoURL )
+                            .withStandardCard( cardTitle, cardContent, config.REGIONAL[locale].storeLogoURL )
                             .withShouldEndSession( true )
                             .getResponse( );
     }
@@ -390,9 +396,12 @@ const CancelOrderIntentHandler = {
 
         const emailPhonetic = ri( "store.emailPhonetic" );
         const intentResponse = ri( "cancel.intent.response", {storeEmailPhonetic: emailPhonetic} );
+
+        const locale                    = handlerInput.requestEnvelope.request.locale;
+
         return handlerInput.jrb
                             .speak( intentResponse )
-                            .withStandardCard( cardTitle, cardContent, config.storeLogoURL )
+                            .withStandardCard( cardTitle, cardContent, config.REGIONAL[locale].storeLogoURL )
                             .withShouldEndSession( true )
                             .getResponse( );
     }
@@ -419,10 +428,11 @@ const OrderTrackerIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'OrderTrackerIntent';
     },
     handle( handlerInput ) {
+        const locale                    = handlerInput.requestEnvelope.request.locale;
         // Implement your code here to query the respective shipping service API's. This demo simply returns a static message.
         return handlerInput.jrb
                             .speak( ri( "orderTracking.intent.response" ) )
-                            .withStandardCard( ri( "orderTracking.card.title" ), ri( "orderTracking.card.content" ), config.storeLogoURL )
+                            .withStandardCard( ri( "orderTracking.card.title" ), ri( "orderTracking.card.content" ), config.REGIONAL[locale].storeLogoURL)
                             .withShouldEndSession( false )
                             .getResponse( );
     }
@@ -482,7 +492,7 @@ const ErrorHandler = {
         // Do not leave this here for production skills as customers will recieve these messages
         console.log( `Log from ErrorHandler: ${ error.message }` );
         console.log(`Intent input: ${stringify(handlerInput)}`);
-        const speechText = config.errorUnknown + ' ' + error.message;
+        const speechText = ri( "error.unknown", {errorMessage: error.message} );
 
         return handlerInput.responseBuilder
             .speak( speechText )
@@ -576,12 +586,12 @@ function amazonPayCharge ( handlerInput ) {
     // Permission check
     handleMissingAmazonPayPermission( handlerInput );
     const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
-    const amazonPayPermission   = permissions.scopes[ config.scope ];
+    const amazonPayPermission   = permissions.scopes[ config.GENERAL.scope ];
 
     if ( amazonPayPermission.status === 'DENIED' ) {
         return handlerInput.jrb
                             .speak( ri( 'enablePermission' ) )
-                            .withAskForPermissionsConsentCard( [ config.scope ] )
+                            .withAskForPermissionsConsentCard( [ config.GENERAL.scope ] )
                             .getResponse();
     }    
 
@@ -655,13 +665,13 @@ function generateResponse ( stage, template, productType, shippingAddress ) {
 
 function handleMissingAmazonPayPermission( handlerInput ) {
     const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
-    const amazonPayPermission   = permissions.scopes[ config.scope ];
+    const amazonPayPermission   = permissions.scopes[ config.GENERAL.scope ];
 
     if ( amazonPayPermission.status === 'DENIED' ) {
         console.log("handling missing pay permission in handleMissingAmazonPayPermission");
         return handlerInput.jrb
                             .speak( ri( 'enablePermission' ) )
-                            .withAskForPermissionsConsentCard( [ config.scope ] )
+                            .withAskForPermissionsConsentCard( [ config.GENERAL.scope ] )
                             .withShouldEndSession( true )
                             .getResponse();
     }

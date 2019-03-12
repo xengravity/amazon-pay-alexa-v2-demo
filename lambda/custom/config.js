@@ -6,7 +6,6 @@
 **/
 
 'use strict';
-
 const utilities = require( 'utilities' );
 
 // Setup & Charge Payload attributes
@@ -15,7 +14,8 @@ const GENERAL = {
     needAmazonShippingAddress:          true,                                       // Optional; Must be boolean
     paymentAction:                      'AuthorizeAndCapture',                      // Required; 'Authorize' or 'AuthorizeAndCapture'
     transactionTimeout:                 0,                                          // Optional; The default value for Alexa transactions is 0
-    bucketName:                         'no-nicks-daneu'                // Required; Used for S3 state management
+    scope:                              'payments:autopay_consent',                 // Required; Used request permissions for Amazon Pay
+    bucketName:                         'no-nicks-daneu'                            // Required; Used for S3 state management
 };
 
 const REGIONAL = {
@@ -35,19 +35,10 @@ const REGIONAL = {
         customInformation:              '',                                         // Optional; Max 1024 chars
         sellerNote:                     'Thanks for shaving with No Nicks',                // Optional; Max 1024 chars, visible on confirmation mails to buyers
         sellerStoreName:                'No Nicks',                                 // Optional; Documentation calls this out as storeName not sellerStoreName
+
+        storeLogoURL:                   'https://s3-us-west-2.amazonaws.com/tcordov/no-nicks-logo-512.png'
     }
 };
-
-/** 
-    The following strings DO NOT interact with Amazon Pay
-    They are here to augment the skill
-
-    Order Summary, Order Confirmation, Cancel and Refund Custom Intents are required for certification:
-    https://developer.amazon.com/docs/amazon-pay/certify-skill-with-amazon-pay.html
-**/
-
-// CARD INFORMATION
-    const storeLogoURL = "https://s3-us-west-2.amazonaws.com/tcordov/no-nicks-logo-512.png";
 
 
 // CART SUMMARY
@@ -55,46 +46,16 @@ const REGIONAL = {
     const cartSummarySubscription          = ' Every 2 months, you’ll be charged {subscriptionPrice} dollars for your refill.';
     const cartSummaryResponse              = 'Your total for the '+ REGIONAL[ 'en-US' ].sellerStoreName +' {productType} is {productPrice} dollars and will ship to your address at {shippingAddress}.<break time=".5s"/>';
 
-    
-/** 
-    The following strings are used to output errors to test the skill
-**/
-
-
-// ERROR RESPONSE STRINGS
-    const scope                            = 'payments:autopay_consent';                                        // Required; Used request permissions for Amazon Pay
-	const errorMessage 					   = 'Merchant error occurred. ';
-	const errorUnknown 					   = 'Unknown error occurred. ';
-	const errorStatusCode 				   = 'Status code: ';
-	const errorStatusMessage 			   = ' Status message: ';
-	const errorPayloadMessage 			   = ' Payload message: ';
-	const errorBillingAgreement			   = 'Billing agreement state is ';
-	const errorBillingAgreementMessage 	   = '. Reach out to the user to resolve this issue.';
-	const authorizationDeclineMessage 	   = 'Your order was not placed and you have not been charged.';
-    const debug                            = 'debug';
 
 
 module.exports = {
     'GENERAL': GENERAL,
     'REGIONAL': REGIONAL,
-
-    'storeLogoURL': storeLogoURL,
-
+    
     // INTENT RESPONSE STRINGS
 
     'cartSummaryCheckout':              cartSummaryCheckout,
     'cartSummarySubscription':          cartSummarySubscription,
     'cartSummaryResponse':              cartSummaryResponse,
 
-	// ERROR RESPONSE STRINGS
-    'scope': 							scope,
-    'errorMessage': 					errorMessage,
-    'errorUnknown': 					errorUnknown,
-    'errorStatusCode': 					errorStatusCode,
-    'errorStatusMessage': 				errorStatusMessage,
-    'errorPayloadMessage': 				errorPayloadMessage,
-    'errorBillingAgreement': 			errorBillingAgreement,
-    'errorBillingAgreementMessage': 	errorBillingAgreementMessage,
-    'authorizationDeclineMessage': 		authorizationDeclineMessage,
-    'debug':                            debug
 };

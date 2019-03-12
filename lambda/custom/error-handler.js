@@ -48,14 +48,15 @@ function handleErrors( handlerInput ) {
 		case 'PeriodicAmountExceeded':
 		case 'ProviderNotAuthorized':
 		case 'ServiceUnavailable':
-			errorMessage = 	config.errorMessage 		+ 
-							config.errorStatusCode 		+ actionResponseStatusCode 		+ '.' +
-							config.errorStatusMessage 	+ actionResponseStatusMessage 	+ '.' +
-							config.errorPayloadMessage  + actionResponsePayloadMessage;
+			errorMessage = 	ri( "error.message", {
+				statusCode: actionResponseStatusCode,
+				statusMessage: actionResponseStatusMessage,
+				payloadMessage: actionResponsePayloadMessage
+			} ); 
 			break;		
 
 		default:
-			errorMessage = config.errorUnknown;
+			errorMessage = ri( "error.unknown", {errorMessage: ""} );
 			break;
 	}
 
@@ -65,7 +66,7 @@ function handleErrors( handlerInput ) {
 	if ( permissionsError ) {
 	    return handlerInput.jrb
 		    .speak( errorMessage )
-		    .withAskForPermissionsConsentCard( [ config.scope ] )
+		    .withAskForPermissionsConsentCard( [ config.GENERAL.scope ] )
 		    .getResponse( );
 	} else {
 	    return handlerInput.jrb
@@ -83,10 +84,10 @@ function handleBillingAgreementState( billingAgreementStatus, handlerInput ) {
 		case 'CANCELED':
 		case 'CLOSED':
 		case 'SUSPENDED':
-			errorMessage = config.errorBillingAgreement +  billingAgreementStatus + config.errorBillingAgreementMessage;
+			errorMessage = ri( "error.billingAgreement", {agreementState: billingAgreementStatus});
 			break;
 		default:
-			errorMessage = config.errorUnknown;
+			errorMessage = ri( "error.unknown", {errorMessage: ""} );
 	}
 
 	debug( handlerInput );
@@ -106,10 +107,10 @@ function handleAuthorizationDeclines( authorizationStatusReasonCode, handlerInpu
 		case 'InvalidPaymentMethod':
 		case 'ProcessingFailure':
 		case 'TransactionTimedOut':
-			errorMessage = config.authorizationDeclineMessage;	
+			errorMessage = ri( "authorizationDeclineMessage" );	
 			break;
 		default:
-			errorMessage = config.errorUnknown;
+			errorMessage = ri( "error.unknown", {errorMessage: ""} );
 	}
 
 	debug( handlerInput );
@@ -121,7 +122,7 @@ function handleAuthorizationDeclines( authorizationStatusReasonCode, handlerInpu
 
 // Output object to console for debugging purposes
 function debug( handlerInput, message ) {
-	console.log( config.debug + ' ' + message + stringify( handlerInput ) );
+	console.log( "debug" + ' ' + message + stringify( handlerInput ) );
 }
 
 module.exports = {
