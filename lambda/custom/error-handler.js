@@ -1,6 +1,8 @@
 'use strict';
 
 const config = require( 'config' );
+const Jargon = require('@jargon/alexa-skill-sdk');
+const ri = Jargon.ri;
 
 /**
 	A detailed list of all payment declines and processing errors can be found here:
@@ -23,7 +25,7 @@ function handleErrors( handlerInput ) {
 		case 'FORBIDDEN':
 		case 'VoicePurchaseNotEnabled': 	// Voice Purchase not enabled 	TODO: Add this to documentation
 			permissionsError 	= true;
-			errorMessage 		= config.enablePermission;
+			errorMessage 		= ri ( "enablePermission" );
 			break;
 
 		// Integration errors - These must be resolved before Amazon Pay can run
@@ -60,12 +62,12 @@ function handleErrors( handlerInput ) {
 
 	// If it is a permissions error send a permission consent card to the user, otherwise .speak() error to resolve during testing
 	if ( permissionsError ) {
-	    return handlerInput.responseBuilder
+	    return handlerInput.jrb
 		    .speak( errorMessage )
 		    .withAskForPermissionsConsentCard( [ config.scope ] )
 		    .getResponse( );
 	} else {
-	    return handlerInput.responseBuilder
+	    return handlerInput.jrb
 		    .speak( errorMessage )
 		    .getResponse( );
 	}

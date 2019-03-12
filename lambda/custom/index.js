@@ -21,26 +21,30 @@ const products          = Object.freeze({
                                             REFILL:  'refill'
                                         });
 
+const stringify = require('json-stringify-safe');
+
 // Welcome, are you interested in a starter kit or a refill subscription?
 const LaunchRequestHandler = {
     canHandle( handlerInput ) {
         return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
     },
     handle( handlerInput ) {
+        console.log(`Intent input: ${stringify(handlerInput)}`);
         // Prevent a previous session's setup from being called prematurely 
         utilities.resetSetup( handlerInput );
 
-        const storeName = ri('storeName');
+        const storeName = ri('store.name');
+        const storeURL = ri( "store.websiteURL" );
         const welcomeTitle = ri('welcome.title', {storeName: storeName});
         const welcomeResponse = ri('welcome.response');
         const welcomeQuestion = ri('welcome.question');
 
         return handlerInput.jrb
-                            .speak(welcomeTitle)
-                            .speak(welcomeResponse)
-                            .speak(welcomeQuestion)
-                            .withStandardCard(welcomeTitle, config.storeURL, config.logoURL)
-                            .reprompt(welcomeQuestion)
+                            .speak( welcomeTitle )
+                            .speak( welcomeResponse )
+                            .speak( welcomeQuestion )
+                            .withStandardCard( welcomeTitle, storeURL, config.storeLogoURL )
+                            .reprompt( welcomeQuestion )
                             .withShouldEndSession( false )
 				            .getResponse( );
     }
@@ -75,8 +79,8 @@ const InProgressStarterKitIntent = {
                         attributes.reengage         = true;
                         attributesManager.setSessionAttributes( attributes );  
 
-                        return handlerInput.responseBuilder
-                            .speak( config.noIntentResponse )
+                        return handlerInput.jrb
+                            .speak( ri( 'noIntentToBuyResponse' ) )
                             .withShouldEndSession( false )
                             .getResponse( );
                     }
@@ -129,8 +133,8 @@ const CompletedRefillIntentHandler = {
             attributes.reengage             = true;
             attributesManager.setSessionAttributes( attributes );  
             
-            return handlerInput.responseBuilder
-                                .speak( config.noIntentResponse )
+            return handlerInput.jrb
+                                .speak( ri('noIntentToBuyResponse') )
                                 .withShouldEndSession( false )
                                 .getResponse();
         } else {
@@ -201,8 +205,8 @@ const NoIntentHandler = {
             attributes.reengage         = true;
             attributesManager.setSessionAttributes( attributes );  
 
-            return handlerInput.responseBuilder
-                                .speak( config.noIntentResponse )
+            return handlerInput.jrb
+                                .speak( ri('noIntentToBuyResponse') )
                                 .withShouldEndSession( false )
                                 .getResponse( );
         }
@@ -243,10 +247,14 @@ const SetupConnectionsResponseHandler = {
             attributesManager.setSessionAttributes( attributes );                      
 
             const shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
+            if(shippingAddress === undefined){
+                shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine2;
+            }
 
             let productType                 = attributes.productType;
             let cartSummaryResponse         = generateResponse( 'summary', config.cartSummaryResponse, productType, shippingAddress );
-            return handlerInput.responseBuilder
+
+            return handlerInput.jrb
                                 .speak( cartSummaryResponse )
                                 .withShouldEndSession( false )
                                 .getResponse( );                    
@@ -288,16 +296,59 @@ const ChargeConnectionsResponseHandler = {
             const { attributesManager }     = handlerInput;
             let attributes                  = attributesManager.getSessionAttributes( );             
             const productType               = attributes.productType;
-            let confirmationCardResponse    = generateResponse( 'confirmation', config.confirmationCardResponse, productType, null );
 
-            return handlerInput.responseBuilder
-                                .speak( config.confirmationIntentResponse )
-                                .withStandardCard( config.confirmationTitle, confirmationCardResponse, config.logoURL )
+            const cardTitle = ri( "confirmation.card.title" );
+            const storeName = ri ( "store.name" );
+            const storeURL = ri( "store.websiteURL" );
+            const product = findProductRepresentation( productType );
+
+            const cardContent = ri( "confirmation.card.content", { 
+                productType: product.voiceRepresenation, 
+                productPrice: product.productPrice, 
+                storeName: storeName, 
+                storeURL: storeURL } 
+            );
+
+            const intentResponse = ri( "confirmation.intent.response", {sellerStoreName: storeName});
+
+            return handlerInput.jrb
+                                .speak( intentResponse )
+                                .withStandardCard( cardTitle, cardContent, config.storeLogoURL )
                                 .withShouldEndSession( true )
                                 .getResponse( );
         }
     }
 };
+
+function findProductRepresentation( productType ){
+    var product = {
+        productPrice: null,
+        subscriptionPrice: null,
+        voiceRepresenation: null
+    };
+    switch ( productType ) {
+        case products.KIT:
+            product.productPrice = 9;
+            product.voiceRepresenation = ri( "products.starterKit" );
+            break;
+
+        case products.REFILL:
+            product.productPrice = 20;
+            product.subscriptionPrice = 20;
+            product.voiceRepresenation = ri( "products.refill" );
+            break;
+
+        case products.UPGRADE:
+            product.productPrice = 9;
+            product.subscriptionPrice = 18;
+            product.voiceRepresenation = ri( "products.upgrade" );
+            break;
+
+        default:
+            console.log( 'Setup Error with productType' );
+    }
+    return product;
+}
 
 // CERTIFICATION REQUIREMENT
 // Tell the customer how they can request a refund
@@ -307,9 +358,17 @@ const RefundOrderIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'RefundOrderIntent';
     },
     handle( handlerInput ) {
-        return handlerInput.responseBuilder
-                            .speak( config.refundOrderIntentResponse )
-                            .withStandardCard( config.refundOrderTitle, config.refundOrderCardResponse, config.logoURL )
+        const cardTitle = ri( "refund.card.title" );
+        const email = ri( "store.email" );
+        const phone = ri( "store.phone" );
+        const cardContent = ri( "refund.card.content", {storePhoneNumber: phone, storeEmail: email} );
+
+        const emailPhonetic = ri( "store.emailPhonetic" );
+        const intentResponse = ri( "refund.intent.response", {storeEmailPhonetic: emailPhonetic} );
+
+        return handlerInput.jrb
+                            .speak( intentResponse )
+                            .withStandardCard( cardTitle, cardContent, config.storeLogoURL )
                             .withShouldEndSession( false )
                             .getResponse( );
     }
@@ -323,9 +382,17 @@ const CancelOrderIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'CancelOrderIntent';
     },
     handle( handlerInput ) {
-        return handlerInput.responseBuilder
-                            .speak( config.cancelOrderIntentResponse )
-                            .withStandardCard( config.cancelOrderTitle, config.cancelOrderCardResponse, config.logoURL )
+
+        const cardTitle = ri( "cancel.card.title" );
+        const email = ri( "store.email" );
+        const phone = ri( "store.phone" );
+        const cardContent = ri( "cancel.card.content", {storePhoneNumber: phone, storeEmail: email} );
+
+        const emailPhonetic = ri( "store.emailPhonetic" );
+        const intentResponse = ri( "cancel.intent.response", {storeEmailPhonetic: emailPhonetic} );
+        return handlerInput.jrb
+                            .speak( intentResponse )
+                            .withStandardCard( cardTitle, cardContent, config.storeLogoURL )
                             .withShouldEndSession( false )
                             .getResponse( );
     }
@@ -338,8 +405,8 @@ const HelpIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent';
     },
     handle( handlerInput ) {
-        return handlerInput.responseBuilder
-                            .speak( config.helpCommandsIntentResponse )
+        return handlerInput.jrb
+                            .speak( ri( "help.response" ) )
                             .withShouldEndSession( false )
                             .getResponse( );
     }
@@ -353,9 +420,9 @@ const OrderTrackerIntentHandler = {
     },
     handle( handlerInput ) {
         // Implement your code here to query the respective shipping service API's. This demo simply returns a static message.
-        return handlerInput.responseBuilder
-                            .speak( config.orderTrackerIntentResponse )
-                            .withStandardCard( config.orderTrackerTitle, config.orderTrackerCardResponse, config.logoURL )
+        return handlerInput.jrb
+                            .speak( ri( "orderTracking.intent.response" ) )
+                            .withStandardCard( ri( "orderTracking.card.title" ), ri( "orderTracking.card.content" ), config.storeLogoURL )
                             .withShouldEndSession( false )
                             .getResponse( );
     }
@@ -369,8 +436,8 @@ const ExitSkillIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'AMAZON.CancelIntent');
     },
     handle( handlerInput ) {
-        return handlerInput.responseBuilder
-                            .speak( config.exitSkillResponse )
+        return handlerInput.jrb
+                            .speak( ri( "exitSkill" ) )
                             .withShouldEndSession( true )
                             .getResponse( );
     }
@@ -382,10 +449,10 @@ const SessionEndedRequestHandler = {
         return handlerInput.requestEnvelope.request.type === 'SessionEndedRequest';
     },
     handle(handlerInput) {
-        return handlerInput.responseBuilder
-            .speak( config.exitSkillResponse )
-            .withShouldEndSession( true )
-            .getResponse();
+        return handlerInput.jrb
+                            .speak( ri( "exitSkill" ) )
+                            .withShouldEndSession( true )
+                            .getResponse();
     },
 };
 
@@ -396,11 +463,13 @@ const FallbackIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'AMAZON.FallbackIntent';
     },
     handle( handlerInput ) {
-        return handlerInput.responseBuilder
-                            .speak( config.fallbackHelpMessage )
+        const helpMessage = ri( "help.response" );
+        const fallbackMessage = ri( "fallback.response", {helpMessage: helpMessage} );
+        return handlerInput.jrb
+                            .speak( fallbackMessage )
                             .withShouldEndSession( false )
                             .getResponse( );
-    }
+}
 };
 
 // Generic error handling
@@ -411,6 +480,8 @@ const ErrorHandler = {
     handle( handlerInput, error ) {
         // This is added with the intent that it is developer facing only
         // Do not leave this here for production skills as customers will recieve these messages
+        console.log( `Log from ErrorHandler: ${ error.message }` );
+        console.log(`Intent input: ${stringify(handlerInput)}`);
         const speechText = config.errorUnknown + ' ' + error.message;
 
         return handlerInput.responseBuilder
@@ -487,13 +558,11 @@ function amazonPaySetup ( handlerInput, productType ) {
     const amazonPayPermission   = permissions.scopes[ config.scope ];
 
     if ( amazonPayPermission.status === 'DENIED' ) {
-        return handlerInput.responseBuilder
-                            .speak( config.enablePermission )
+        return handlerInput.jrb
+                            .speak( ri( 'enablePermission' ) )
                             .withAskForPermissionsConsentCard( [ config.scope ] )
                             .getResponse();
     } 
-
-    var foo = handlerInput.requestEnvelope.request.locale ;
 
     // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
     const token                     = utilities.generateRandomString( 12 );
@@ -518,8 +587,8 @@ function amazonPayCharge ( handlerInput ) {
     const amazonPayPermission   = permissions.scopes[ config.scope ];
 
     if ( amazonPayPermission.status === 'DENIED' ) {
-        return handlerInput.responseBuilder
-                            .speak( config.enablePermission )
+        return handlerInput.jrb
+                            .speak( ri( 'enablePermission' ) )
                             .withAskForPermissionsConsentCard( [ config.scope ] )
                             .getResponse();
     }    
@@ -550,8 +619,6 @@ function generateResponse ( stage, template, productType, shippingAddress ) {
     let subscriptionPrice           = '';
     let cartSummaryResponse         = template;
     let cartSummarySubscription     = config.cartSummarySubscription;
-    let confirmationCardResponse    = template;
-    let confirmationItem            = '';     
 
     switch ( productType ) {
         case products.KIT:
@@ -588,13 +655,10 @@ function generateResponse ( stage, template, productType, shippingAddress ) {
     cartSummaryResponse      = cartSummaryResponse.replace( '{productType}', productType ).replace( '{productPrice}', productPrice ).replace( '{shippingAddress}', shippingAddress );
     cartSummaryResponse      += cartSummarySubscription + config.cartSummaryCheckout;
 
-    confirmationCardResponse = confirmationCardResponse.replace( '{productType}' , confirmationItem ).replace( '{productPrice}' , productPrice );
 
     if ( stage === 'summary' ) {
         return cartSummaryResponse;
-    } else if ( stage === 'confirmation') {
-        return confirmationCardResponse;
-    }
+    } 
 }
 
 function handleMissingAmazonPayPermission( handlerInput ) {
@@ -602,8 +666,8 @@ function handleMissingAmazonPayPermission( handlerInput ) {
     const amazonPayPermission   = permissions.scopes[ config.scope ];
 
     if ( amazonPayPermission.status === 'DENIED' ) {
-        return handlerInput.responseBuilder
-                            .speak( config.enablePermission )
+        return handlerInput.jrb
+                            .speak( ri( 'enablePermission' ) )
                             .withAskForPermissionsConsentCard( [ config.scope ] )
                             .getResponse();
     }
