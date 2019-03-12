@@ -254,10 +254,10 @@ const SetupConnectionsResponseHandler = {
             }
 
             let productType                 = attributes.productType;
-            let cartSummaryResponse         = generateResponse( 'summary', config.cartSummaryResponse, productType, shippingAddress );
+            const product = findProductRepresentation( productType, shippingAddress);
 
             return handlerInput.jrb
-                                .speak( cartSummaryResponse )
+                                .speak( product.intentResponse )
                                 .withShouldEndSession( false )
                                 .getResponse( );                    
 
@@ -324,28 +324,61 @@ const ChargeConnectionsResponseHandler = {
     }
 };
 
-function findProductRepresentation( productType ){
+function findProductRepresentation( productType, shippingAddress ){
     var product = {
         productPrice: null,
         subscriptionPrice: null,
-        voiceRepresenation: null
+        voiceRepresenation: null,
+        intentResponse: null
     };
+    const storeName = ri( "store.name" );
+    const checkoutQuestion = ri( "summary.checkoutQuestion" );
     switch ( productType ) {
         case products.KIT:
             product.productPrice = 9;
             product.voiceRepresenation = ri( "products.starterKit" );
+            product.intentResponse = ri ( "summary.cartDetails", {
+                sellerStoreName: storeName,
+                productType: product.voiceRepresenation,
+                productPrice: product.productPrice,
+                shippingAddress: shippingAddress,
+                subscriptionDetails: "",
+                checkoutQuestion: checkoutQuestion
+            } )
             break;
 
         case products.REFILL:
             product.productPrice = 20;
             product.subscriptionPrice = 20;
             product.voiceRepresenation = ri( "products.refill" );
+            const subscriptionDetails = ri( "summary.subscriptionDetails", {
+                subscriptionPrice: product.subscriptionPrice
+            } );
+            product.intentResponse = ri ( "summary.cartDetails", {
+                sellerStoreName: storeName,
+                productType: product.voiceRepresenation,
+                productPrice: product.productPrice,
+                shippingAddress: shippingAddress,
+                subscriptionDetails: subscriptionDetails,
+                checkoutQuestion: checkoutQuestion
+            } );
             break;
 
         case products.UPGRADE:
             product.productPrice = 9;
             product.subscriptionPrice = 18;
             product.voiceRepresenation = ri( "products.upgrade" );
+            const subscriptionDetails = ri( "summary.subscriptionDetails", {
+                subscriptionPrice: product.subscriptionPrice
+            } );
+            product.intentResponse = ri ( "summary.cartDetails", {
+                sellerStoreName: storeName,
+                productType: product.voiceRepresenation,
+                productPrice: product.productPrice,
+                shippingAddress: shippingAddress,
+                subscriptionDetails: subscriptionDetails,
+                checkoutQuestion: checkoutQuestion
+            } );
             break;
 
         default:
@@ -613,54 +646,6 @@ function amazonPayCharge ( handlerInput ) {
                         .addDirective( chargeRequestDirective )
                         .withShouldEndSession( true )
                         .getResponse( );
-}
-
-// Returns product specific string for summary or checkout intent responses
-function generateResponse ( stage, template, productType, shippingAddress ) {
-    let productPrice                = '';
-    let subscriptionPrice           = '';
-    let cartSummaryResponse         = template;
-    let cartSummarySubscription     = config.cartSummarySubscription;
-
-    switch ( productType ) {
-        case products.KIT:
-            productType             = 'Starter Kit';
-            confirmationItem        = 'Starter Kit';
-            productPrice            = 9;
-            cartSummarySubscription = '';
-            break;
-
-        case products.REFILL:
-            confirmationItem        = 'Refill Subscription';   
-            productPrice            = 20;
-            subscriptionPrice       = 20;
-            cartSummarySubscription = cartSummarySubscription.replace( '{subscriptionPrice}', subscriptionPrice );
-            break;
-
-        case products.UPGRADE:
-            productType             = 'Starter Kit';
-            confirmationItem        = 'Starter Kit + Refill Subscription';  
-            productPrice            = 9;
-            subscriptionPrice       = 18;
-            cartSummarySubscription = cartSummarySubscription.replace( '{subscriptionPrice}', subscriptionPrice );
-            break;
-
-        default:
-            console.log( 'Setup Error with productType' );
-
-            // This is added with the intent that it is developer facing only
-            // Do not leave this here for production skills as customers will recieve these messages            
-            cartSummaryResponse     = 'Error Setup with productType';
-            break;
-    }
-
-    cartSummaryResponse      = cartSummaryResponse.replace( '{productType}', productType ).replace( '{productPrice}', productPrice ).replace( '{shippingAddress}', shippingAddress );
-    cartSummaryResponse      += cartSummarySubscription + config.cartSummaryCheckout;
-
-
-    if ( stage === 'summary' ) {
-        return cartSummaryResponse;
-    } 
 }
 
 function handleMissingAmazonPayPermission( handlerInput ) {
