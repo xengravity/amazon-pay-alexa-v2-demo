@@ -27,13 +27,13 @@ const REGIONAL = {
         sandboxMode:                    true,                                       // Optional; Must be false for certification || production; Must be true for sandbox testing
         sandboxCustomerEmailId:         'INSERT-YOUR-SANDBOX-EMAIL-ADDRESS',        // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
         sellerAuthorizationNote:        utilities.getSimulationString( '' ),        // Optional; Max 255 chars
-        softDescriptor:                 '',                                         // Optional; Max 16 chars
+        softDescriptor:                 'No Nicks',                                 // Optional; Please provide a meaningful value, this is visibla on the buyers' statements. Max 16 chars.
         amount:                         '0.01',                                     // Required; Max $150,000.00 USD
         currencyCode:                   'USD',                                      // Required;
 
         // SELLER ORDER ATTRIBUTES
-        customInformation:              'customInformation max 1024 chars',         // Optional; Max 1024 chars
-        sellerNote:                     'sellerNote max 1024 chars',                // Optional; Max 1024 chars
+        customInformation:              '',                                         // Optional; Max 1024 chars
+        sellerNote:                     'Thanks for shaving with No Nicks',                // Optional; Max 1024 chars, visible on confirmation mails to buyers
         sellerStoreName:                'No Nicks',                                 // Optional; Documentation calls this out as storeName not sellerStoreName
     }
 };
