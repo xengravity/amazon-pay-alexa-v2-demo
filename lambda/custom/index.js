@@ -369,7 +369,7 @@ const RefundOrderIntentHandler = {
         return handlerInput.jrb
                             .speak( intentResponse )
                             .withStandardCard( cardTitle, cardContent, config.storeLogoURL )
-                            .withShouldEndSession( false )
+                            .withShouldEndSession( true )
                             .getResponse( );
     }
 };
@@ -393,7 +393,7 @@ const CancelOrderIntentHandler = {
         return handlerInput.jrb
                             .speak( intentResponse )
                             .withStandardCard( cardTitle, cardContent, config.storeLogoURL )
-                            .withShouldEndSession( false )
+                            .withShouldEndSession( true )
                             .getResponse( );
     }
 };
