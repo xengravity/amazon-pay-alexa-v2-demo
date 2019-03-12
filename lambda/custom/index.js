@@ -552,17 +552,8 @@ function amazonPaySetup ( handlerInput, productType ) {
     attributesManager.setSessionAttributes( attributes );
     
     //Permission check
+    console.log("permission check");
     handleMissingAmazonPayPermission( handlerInput );
-
-    const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
-    const amazonPayPermission   = permissions.scopes[ config.scope ];
-
-    if ( amazonPayPermission.status === 'DENIED' ) {
-        return handlerInput.jrb
-                            .speak( ri( 'enablePermission' ) )
-                            .withAskForPermissionsConsentCard( [ config.scope ] )
-                            .getResponse();
-    } 
 
     // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
     const token                     = utilities.generateRandomString( 12 );
@@ -576,6 +567,7 @@ function amazonPaySetup ( handlerInput, productType ) {
                         .addDirective( setupRequestDirective )
                         .withShouldEndSession( true )
                         .getResponse( ); 
+
 }
 
 // Customer has requested checkout and wants to be charged
@@ -666,9 +658,11 @@ function handleMissingAmazonPayPermission( handlerInput ) {
     const amazonPayPermission   = permissions.scopes[ config.scope ];
 
     if ( amazonPayPermission.status === 'DENIED' ) {
+        console.log("handling missing pay permission in handleMissingAmazonPayPermission");
         return handlerInput.jrb
                             .speak( ri( 'enablePermission' ) )
                             .withAskForPermissionsConsentCard( [ config.scope ] )
+                            .withShouldEndSession( true )
                             .getResponse();
     }
 }

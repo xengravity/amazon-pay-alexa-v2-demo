@@ -3,6 +3,7 @@
 const config = require( 'config' );
 const Jargon = require('@jargon/alexa-skill-sdk');
 const ri = Jargon.ri;
+const stringify = require('json-stringify-safe');
 
 /**
 	A detailed list of all payment declines and processing errors can be found here:
@@ -120,7 +121,7 @@ function handleAuthorizationDeclines( authorizationStatusReasonCode, handlerInpu
 
 // Output object to console for debugging purposes
 function debug( handlerInput, message ) {
-	console.log( config.debug + ' ' + message + JSON.stringify( handlerInput ) );
+	console.log( config.debug + ' ' + message + stringify( handlerInput ) );
 }
 
 module.exports = {
