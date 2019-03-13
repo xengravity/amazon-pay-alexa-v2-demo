@@ -61,7 +61,7 @@
     },
     "summary": {
         "cartDetails": "Your total for the {sellerStoreName} {productType} is {productPrice} dollars and will ship to your address at {shippingAddress}.<break time='.5s'/> {subscriptionDetails}. {checkoutQuestion}",
-        "checkoutQustion": "Do you want to check out now?",
+        "checkoutQuestion": "Do you want to check out now?",
         "subscriptionDetails": "Every 2 months, you’ll be charged {subscriptionPrice} dollars for your refill."
     },
     "exitSkill": "OK, bye for now.",

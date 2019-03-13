@@ -2,6 +2,7 @@
 const Jargon = require('@jargon/alexa-skill-sdk');
 const ri = Jargon.ri;
 const stringify = require('json-stringify-safe');
+const products         = require( 'products' );
 
 /**
     A detailed list simulation strings to use in sandboxMode can be found here:
@@ -106,6 +107,7 @@ function findProductRepresentation( productType, shippingAddress ){
     };
     const storeName = ri( "store.name" );
     const checkoutQuestion = ri( "summary.checkoutQuestion" );
+    let subscriptionDetails = "";
     switch ( productType ) {
         case products.KIT:
             product.productPrice = 9;
@@ -115,7 +117,7 @@ function findProductRepresentation( productType, shippingAddress ){
                 productType: product.voiceRepresenation,
                 productPrice: product.productPrice,
                 shippingAddress: shippingAddress,
-                subscriptionDetails: "",
+                subscriptionDetails: subscriptionDetails,
                 checkoutQuestion: checkoutQuestion
             } )
             break;
@@ -124,7 +126,7 @@ function findProductRepresentation( productType, shippingAddress ){
             product.productPrice = 20;
             product.subscriptionPrice = 20;
             product.voiceRepresenation = ri( "products.refill" );
-            const subscriptionDetails = ri( "summary.subscriptionDetails", {
+            subscriptionDetails = ri( "summary.subscriptionDetails", {
                 subscriptionPrice: product.subscriptionPrice
             } );
             product.intentResponse = ri ( "summary.cartDetails", {
@@ -141,7 +143,7 @@ function findProductRepresentation( productType, shippingAddress ){
             product.productPrice = 9;
             product.subscriptionPrice = 18;
             product.voiceRepresenation = ri( "products.upgrade" );
-            const subscriptionDetails = ri( "summary.subscriptionDetails", {
+            subscriptionDetails = ri( "summary.subscriptionDetails", {
                 subscriptionPrice: product.subscriptionPrice
             } );
             product.intentResponse = ri ( "summary.cartDetails", {
@@ -160,14 +162,14 @@ function findProductRepresentation( productType, shippingAddress ){
     return product;
 }
 
-function handleMissingAmazonPayPermission( handlerInput ) {
+function handleMissingPermission( handlerInput, scope ) {
     const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
-    const amazonPayPermission   = permissions.scopes[ config.GENERAL.scope ];
+    const amazonPayPermission   = permissions.scopes[ scope ];
 
     if ( amazonPayPermission.status === 'DENIED' ) {
         return handlerInput.jrb
                             .speak( ri( 'enablePermission' ) )
-                            .withAskForPermissionsConsentCard( [ config.GENERAL.scope ] )
+                            .withAskForPermissionsConsentCard( [ scope ] )
                             .withShouldEndSession( true )
                             .getResponse();
     }
@@ -184,7 +186,7 @@ module.exports = {
 	'getSlotValues': 					getSlotValues,
 	'resetSetup': 						resetSetup,
 	'findProductRepresentation': 		findProductRepresentation,
-	'handleMissingAmazonPayPermission': handleMissingAmazonPayPermission,
+	'handleMissingPermission':          handleMissingPermission,
 	'debug': 							debug
 };
 

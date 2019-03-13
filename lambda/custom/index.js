@@ -11,15 +11,11 @@ const ri = Jargon.ri;
 const config            = require( 'config' );
 const error             = require( 'error-handler' );
 const utilities         = require( 'utilities' );
+const products         = require( 'products' );
 const directiveBuilder  = require( 'directive-builder' );
 const payloadBuilder    = require( 'payload-builder' );
 const s3Adapter         = require( 'ask-sdk-s3-persistence-adapter' ).S3PersistenceAdapter;
 let persistence         = '';
-const products          = Object.freeze({
-                                            KIT:     'kit',
-                                            UPGRADE: 'upgrade',
-                                            REFILL:  'refill'
-                                        });
 
 const stringify = require('json-stringify-safe');
 
@@ -104,7 +100,7 @@ const InProgressStarterKitIntent = {
             } 
         }
 
-        return handlerInput.responseBuilder
+        return handlerInput.jrb
                             .addDelegateDirective( currentIntent )
                             .getResponse( );
     }
@@ -176,7 +172,7 @@ const YesIntentHandler = {
         } else {
             // This is added with the intent that it is developer facing only
             // Do not leave this here for production skills as customers will recieve these messages
-            return handlerInput.responseBuilder
+            return handlerInput.jrb
                                 .speak( 'Error: Check the yes intent handler' )
                                 .withShouldEndSession( false )
                                 .getResponse( );
@@ -247,7 +243,7 @@ const SetupConnectionsResponseHandler = {
             attributes.setup                = true;
             attributesManager.setSessionAttributes( attributes );                      
 
-            const shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
+            let shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
             if(shippingAddress === undefined){
                 shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine2;
             }
@@ -453,21 +449,35 @@ const FallbackIntentHandler = {
 
 // Generic error handling
 const ErrorHandler = {
-    canHandle( ) {
+    canHandle() {
         return true;
     },
-    handle( handlerInput, error ) {
-        // This is added with the intent that it is developer facing only
-        // Do not leave this here for production skills as customers will recieve these messages
-        console.log( `Log from ErrorHandler: ${ error.message }` );
-        console.log(`Intent input: ${stringify(handlerInput)}`);
-        const speechText = ri( "error.unknown", {errorMessage: error.message} );
+    handle(handlerInput, error) {
+        const debug = true;
+        const stack = error.stack.split('\n');
+        console.log(stack[0]);
+        console.log(stack[1]);
 
-        return handlerInput.responseBuilder
-            .speak( speechText )
-            .reprompt( speechText )
+        let errorLoc = stack[1].substring(stack[1].lastIndexOf('/') + 1, 900);
+
+        errorLoc = errorLoc.slice(0, -1);
+
+        const file = errorLoc.substring(0, errorLoc.indexOf(':'));
+        let line = errorLoc.substring(errorLoc.indexOf(':') + 1, 900);
+        line = line.substring(0, line.indexOf(':'));
+
+        let speechOutput = 'Sorry, an error occurred. ';
+        if(debug) {
+            speechOutput +=  error.message + ' in ' + file + ', line ' + line;
+        }
+
+        console.log("ERROR: " + speechOutput);
+
+        return handlerInput.jrb
+            .speak(speechOutput)
+            .reprompt(speechOutput)
             .getResponse();
-    }
+    },
 };
 
 // This request interceptor with each new session loads all global persistent attributes
@@ -531,7 +541,8 @@ function amazonPaySetup ( handlerInput, productType ) {
     attributesManager.setSessionAttributes( attributes );
     
     //Permission check
-    utilities.handleMissingAmazonPayPermission( handlerInput );
+    console.log("starting permission check");
+    utilities.handleMissingPermission( handlerInput, config.GENERAL.scope );
 
     // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
     const token                     = utilities.generateRandomString( 12 );
@@ -541,7 +552,7 @@ function amazonPaySetup ( handlerInput, productType ) {
     const setupRequestDirective     = directiveBuilder.createSetupDirective( setupPayload, token );
 
     
-    return handlerInput.responseBuilder
+    return handlerInput.jrb
                         .addDirective( setupRequestDirective )
                         .withShouldEndSession( true )
                         .getResponse( ); 
@@ -552,7 +563,7 @@ function amazonPaySetup ( handlerInput, productType ) {
 function amazonPayCharge ( handlerInput ) {
 
     // Permission check
-    utilities.handleMissingAmazonPayPermission( handlerInput );
+    utilities.handleMissingPermission( handlerInput, config.GENERAL.scope );
     const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
     const amazonPayPermission   = permissions.scopes[ config.GENERAL.scope ];
 
@@ -577,7 +588,7 @@ function amazonPayCharge ( handlerInput ) {
     const chargePayload             = payloadBuilder.chargePayload(billingAgreementId, authorizationReferenceId, sellerOrderId, amount, locale);
     const chargeRequestDirective    = directiveBuilder.createChargeDirective(chargePayload, token);
 
-    return handlerInput.responseBuilder
+    return handlerInput.jrb
                         .addDirective( chargeRequestDirective )
                         .withShouldEndSession( true )
                         .getResponse( );

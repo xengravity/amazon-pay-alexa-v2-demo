@@ -92,7 +92,7 @@ function handleBillingAgreementState( billingAgreementStatus, handlerInput ) {
 
 	utilities.debug( handlerInput );
 
-	return handlerInput.responseBuilder
+	return handlerInput.jrb
 		.speak( errorMessage )
 		.getResponse( );
 }
@@ -115,7 +115,7 @@ function handleAuthorizationDeclines( authorizationStatusReasonCode, handlerInpu
 
 	utilities.debug( handlerInput );
 	
-	return handlerInput.responseBuilder
+	return handlerInput.jrb
 		.speak( errorMessage )
 		.getResponse( );	
 }
