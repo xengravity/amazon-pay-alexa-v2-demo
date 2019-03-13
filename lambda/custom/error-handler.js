@@ -1,6 +1,9 @@
 'use strict';
 
 const config = require( 'config' );
+const Jargon = require('@jargon/alexa-skill-sdk');
+const ri = Jargon.ri;
+const utilities         = require( 'utilities' );
 
 /**
 	A detailed list of all payment declines and processing errors can be found here:
@@ -23,7 +26,7 @@ function handleErrors( handlerInput ) {
 		case 'FORBIDDEN':
 		case 'VoicePurchaseNotEnabled': 	// Voice Purchase not enabled 	TODO: Add this to documentation
 			permissionsError 	= true;
-			errorMessage 		= config.enablePermission;
+			errorMessage 		= ri ( "enablePermission" );
 			break;
 
 		// Integration errors - These must be resolved before Amazon Pay can run
@@ -45,27 +48,26 @@ function handleErrors( handlerInput ) {
 		case 'PeriodicAmountExceeded':
 		case 'ProviderNotAuthorized':
 		case 'ServiceUnavailable':
-			errorMessage = 	config.errorMessage 		+ 
-							config.errorStatusCode 		+ actionResponseStatusCode 		+ '.' +
-							config.errorStatusMessage 	+ actionResponseStatusMessage 	+ '.' +
-							config.errorPayloadMessage  + actionResponsePayloadMessage;
+			errorMessage = 	ri( "error.message", {
+				statusCode: actionResponseStatusCode,
+				statusMessage: actionResponseStatusMessage,
+				payloadMessage: actionResponsePayloadMessage
+			} ); 
 			break;		
 
 		default:
-			errorMessage = config.errorUnknown;
+			errorMessage = ri( "error.unknown", {errorMessage: ""} );
 			break;
 	}
 
-	debug( handlerInput );
-
 	// If it is a permissions error send a permission consent card to the user, otherwise .speak() error to resolve during testing
 	if ( permissionsError ) {
-	    return handlerInput.responseBuilder
+	    return handlerInput.jrb
 		    .speak( errorMessage )
-		    .withAskForPermissionsConsentCard( [ config.scope ] )
+		    .withAskForPermissionsConsentCard( [ config.GENERAL.scope ] )
 		    .getResponse( );
 	} else {
-	    return handlerInput.responseBuilder
+	    return handlerInput.jrb
 		    .speak( errorMessage )
 		    .getResponse( );
 	}
@@ -80,15 +82,13 @@ function handleBillingAgreementState( billingAgreementStatus, handlerInput ) {
 		case 'CANCELED':
 		case 'CLOSED':
 		case 'SUSPENDED':
-			errorMessage = config.errorBillingAgreement +  billingAgreementStatus + config.errorBillingAgreementMessage;
+			errorMessage = ri( "error.billingAgreement", {agreementState: billingAgreementStatus});
 			break;
 		default:
-			errorMessage = config.errorUnknown;
+			errorMessage = ri( "error.unknown", {errorMessage: ""} );
 	}
 
-	debug( handlerInput );
-
-	return handlerInput.responseBuilder
+	return handlerInput.jrb
 		.speak( errorMessage )
 		.getResponse( );
 }
@@ -103,27 +103,20 @@ function handleAuthorizationDeclines( authorizationStatusReasonCode, handlerInpu
 		case 'InvalidPaymentMethod':
 		case 'ProcessingFailure':
 		case 'TransactionTimedOut':
-			errorMessage = config.authorizationDeclineMessage;	
+			errorMessage = ri( "authorizationDeclineMessage" );	
 			break;
 		default:
-			errorMessage = config.errorUnknown;
+			errorMessage = ri( "error.unknown", {errorMessage: ""} );
 	}
-
-	debug( handlerInput );
 	
-	return handlerInput.responseBuilder
+	return handlerInput.jrb
 		.speak( errorMessage )
 		.getResponse( );	
 }
 
-// Output object to console for debugging purposes
-function debug( handlerInput, message ) {
-	console.log( config.debug + ' ' + message + JSON.stringify( handlerInput ) );
-}
 
 module.exports = {
     'handleErrors': 					handleErrors,
     'handleBillingAgreementState': 		handleBillingAgreementState,
-    'handleAuthorizationDeclines': 		handleAuthorizationDeclines,
-    'debug': 							debug
+    'handleAuthorizationDeclines': 		handleAuthorizationDeclines
 };

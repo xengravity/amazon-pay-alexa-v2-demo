@@ -1,0 +1,76 @@
+{
+    "store": {
+        "name": "No Nicks",
+        "websiteURL": "www.nonicks.com",
+        "phone": "1-234-567-8910",
+        "email": "help@nonicks.com",
+        "emailPhonetic": "help at no nicks dot com"
+    },
+    "products": {
+        "starterKit": "Starter Kit",
+        "refill": "Refill Subscription",
+        "upgrade": "Starter Kit + Refill Subscription"
+    },
+    "welcome": {
+        "title" : "Welcome to {storeName}.",
+        "response": "We have everything you need for the perfect shave.",
+        "question": "Are you interested in a starter kit, or refills?"
+    },
+    "refund": {
+        "intent": {
+            "response": "To request a refund, email {storeEmailPhonetic}, or call us. I sent contact information to your Alexa app.'"
+        },
+        "card": {
+            "title": "Refund Order Details",
+            "content": "Not completely happy with your order? We are here to help.\n To request a refund, contact us at {storePhoneNumber} or email {storeEmail}."
+        }
+    },
+    "cancel": {
+        "intent": {
+            "response": "To request a cancellation, email {storeEmailPhonetic}, or call us. I sent contact information to your Alexa app.'"
+        },
+        "card": {
+            "title": "Cancel Order Details",
+            "content": "Want to change or cancel your order? Contact us at {storePhoneNumber} or email {storeEmail}."
+        }
+    },
+    "help": {
+        "response": "To check order status, say where is my order. To cancel an order, say cancel order. To ask for a refund, say refund."
+    },
+    "fallback": {
+        "response": "Hmm, I'm not sure about that. {helpMessage}"
+    },
+    "orderTracking": {
+        "intent": {
+            "response": "Your order shipped via UPS, and delivery is estimated for this Friday. Check your order email for the tracking number."
+        },
+        "card": {
+            "title": "Order Status",
+            "content": "Your order #19206 was shipped via UPS and is estimated to arrive on Friday.\n You can check the status at any time using tracking number 9400121699000025552416."
+
+        }
+    },
+    "confirmation": {
+        "intent": {
+            "response": "{sellerStoreName} will email you when your order ships. Thanks for shaving with {sellerStoreName}."
+        },
+        "card": {
+            "title": "Order Confirmation Details",
+            "content": "Your order has been placed.\nProducts: 1 {productType}\nTotal amount: ${productPrice}\nThanks for shaving with {storeName}.\n{storeURL}"
+        }
+    },
+    "summary": {
+        "cartDetails": "Your total for the {sellerStoreName} {productType} is {productPrice} dollars and will ship to your address at {shippingAddress}.<break time='.5s'/> {subscriptionDetails}. {checkoutQuestion}",
+        "checkoutQuestion": "Do you want to check out now?",
+        "subscriptionDetails": "Every 2 months, you’ll be charged {subscriptionPrice} dollars for your refill."
+    },
+    "exitSkill": "OK, bye for now.",
+    "noIntentToBuyResponse": "Okay. Do you want to order something else?",
+    "enablePermission": "To make purchases in this skill, you need to enable Amazon Pay and turn on voice purchasing. To help, I sent a card to your Alexa app.",
+    "error": {
+        "message": "Merchant error occurred. Status code: {statusCode}, Status message: {statusMessage}. Payload message: {payloadMessage}",
+        "unknown": "Unknown error occurred. {errorMessage}",
+        "billingAgreement": "Billing agreement state is {agreementState}. Reach out to the user to resolve this issue.",
+        "authorizationDeclineMessage": "Your order was not placed and you have not been charged."
+    }
+}

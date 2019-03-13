@@ -5,19 +5,17 @@
 
 'use strict';
 
-const askSDK            = require( 'ask-sdk-core' );
+const Alexa            = require( 'ask-sdk-core' );
+const Jargon = require('@jargon/alexa-skill-sdk');
+const ri = Jargon.ri;
 const config            = require( 'config' );
 const error             = require( 'error-handler' );
 const utilities         = require( 'utilities' );
+const products         = require( 'products' );
 const directiveBuilder  = require( 'directive-builder' );
 const payloadBuilder    = require( 'payload-builder' );
 const s3Adapter         = require( 'ask-sdk-s3-persistence-adapter' ).S3PersistenceAdapter;
 let persistence         = '';
-const products          = Object.freeze({
-                                            KIT:     'kit',
-                                            UPGRADE: 'upgrade',
-                                            REFILL:  'refill'
-                                        });
 
 // Welcome, are you interested in a starter kit or a refill subscription?
 const LaunchRequestHandler = {
@@ -28,10 +26,20 @@ const LaunchRequestHandler = {
         // Prevent a previous session's setup from being called prematurely 
         utilities.resetSetup( handlerInput );
 
-        return handlerInput.responseBuilder
-                            .speak( config.launchRequestWelcomeResponse + ' ' + config.launchRequestQuestionResponse )
-                            .withStandardCard( config.launchRequestWelcomeTitle, config.storeURL, config.logoURL )
-				            .reprompt( config.launchRequestQuestionResponse )
+        const storeName = ri('store.name');
+        const storeURL = ri( "store.websiteURL" );
+        const welcomeTitle = ri('welcome.title', {storeName: storeName});
+        const welcomeResponse = ri('welcome.response');
+        const welcomeQuestion = ri('welcome.question');
+
+        const locale                    = handlerInput.requestEnvelope.request.locale;
+
+        return handlerInput.jrb
+                            .speak( welcomeTitle )
+                            .speak( welcomeResponse )
+                            .speak( welcomeQuestion )
+                            .withStandardCard( welcomeTitle, storeURL, config.REGIONAL[locale].storeLogoURL )
+                            .reprompt( welcomeQuestion )
                             .withShouldEndSession( false )
 				            .getResponse( );
     }
@@ -66,8 +74,8 @@ const InProgressStarterKitIntent = {
                         attributes.reengage         = true;
                         attributesManager.setSessionAttributes( attributes );  
 
-                        return handlerInput.responseBuilder
-                            .speak( config.noIntentResponse )
+                        return handlerInput.jrb
+                            .speak( ri( 'noIntentToBuyResponse' ) )
                             .withShouldEndSession( false )
                             .getResponse( );
                     }
@@ -90,7 +98,7 @@ const InProgressStarterKitIntent = {
             } 
         }
 
-        return handlerInput.responseBuilder
+        return handlerInput.jrb
                             .addDelegateDirective( currentIntent )
                             .getResponse( );
     }
@@ -120,8 +128,8 @@ const CompletedRefillIntentHandler = {
             attributes.reengage             = true;
             attributesManager.setSessionAttributes( attributes );  
             
-            return handlerInput.responseBuilder
-                                .speak( config.noIntentResponse )
+            return handlerInput.jrb
+                                .speak( ri('noIntentToBuyResponse') )
                                 .withShouldEndSession( false )
                                 .getResponse();
         } else {
@@ -146,9 +154,9 @@ const YesIntentHandler = {
             attributes.reengage     = false;
             attributesManager.setSessionAttributes( attributes );
 
-            return handlerInput.responseBuilder
-                                .speak( config.launchRequestQuestionResponse )
-                                .reprompt( config.launchRequestQuestionResponse )
+            return handlerInput.jrb
+                                .speak( ri( "welcome.question" ) )
+                                .reprompt( ri( "welcome.question" ) )
                                 .withShouldEndSession( false )
                                 .getResponse( );
         }
@@ -162,7 +170,7 @@ const YesIntentHandler = {
         } else {
             // This is added with the intent that it is developer facing only
             // Do not leave this here for production skills as customers will recieve these messages
-            return handlerInput.responseBuilder
+            return handlerInput.jrb
                                 .speak( 'Error: Check the yes intent handler' )
                                 .withShouldEndSession( false )
                                 .getResponse( );
@@ -192,8 +200,8 @@ const NoIntentHandler = {
             attributes.reengage         = true;
             attributesManager.setSessionAttributes( attributes );  
 
-            return handlerInput.responseBuilder
-                                .speak( config.noIntentResponse )
+            return handlerInput.jrb
+                                .speak( ri('noIntentToBuyResponse') )
                                 .withShouldEndSession( false )
                                 .getResponse( );
         }
@@ -233,12 +241,16 @@ const SetupConnectionsResponseHandler = {
             attributes.setup                = true;
             attributesManager.setSessionAttributes( attributes );                      
 
-            const shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
+            let shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
+            if(shippingAddress === undefined){
+                shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine2;
+            }
 
             let productType                 = attributes.productType;
-            let cartSummaryResponse         = generateResponse( 'summary', config.cartSummaryResponse, productType, shippingAddress );
-            return handlerInput.responseBuilder
-                                .speak( cartSummaryResponse )
+            const product = utilities.findProductRepresentation( productType, shippingAddress);
+
+            return handlerInput.jrb
+                                .speak( product.intentResponse )
                                 .withShouldEndSession( false )
                                 .getResponse( );                    
 
@@ -279,11 +291,26 @@ const ChargeConnectionsResponseHandler = {
             const { attributesManager }     = handlerInput;
             let attributes                  = attributesManager.getSessionAttributes( );             
             const productType               = attributes.productType;
-            let confirmationCardResponse    = generateResponse( 'confirmation', config.confirmationCardResponse, productType, null );
 
-            return handlerInput.responseBuilder
-                                .speak( config.confirmationIntentResponse )
-                                .withStandardCard( config.confirmationTitle, confirmationCardResponse, config.logoURL )
+            const cardTitle = ri( "confirmation.card.title" );
+            const storeName = ri ( "store.name" );
+            const storeURL = ri( "store.websiteURL" );
+            const product = utilities.findProductRepresentation( productType );
+
+            const locale                    = handlerInput.requestEnvelope.request.locale;
+
+            const cardContent = ri( "confirmation.card.content", { 
+                productType: product.voiceRepresenation, 
+                productPrice: product.productPrice, 
+                storeName: storeName, 
+                storeURL: storeURL } 
+            );
+
+            const intentResponse = ri( "confirmation.intent.response", {sellerStoreName: storeName});
+
+            return handlerInput.jrb
+                                .speak( intentResponse )
+                                .withStandardCard( cardTitle, cardContent, config.REGIONAL[locale].storeLogoURL )
                                 .withShouldEndSession( true )
                                 .getResponse( );
         }
@@ -298,10 +325,20 @@ const RefundOrderIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'RefundOrderIntent';
     },
     handle( handlerInput ) {
-        return handlerInput.responseBuilder
-                            .speak( config.refundOrderIntentResponse )
-                            .withStandardCard( config.refundOrderTitle, config.refundOrderCardResponse, config.logoURL )
-                            .withShouldEndSession( false )
+        const cardTitle = ri( "refund.card.title" );
+        const email = ri( "store.email" );
+        const phone = ri( "store.phone" );
+        const cardContent = ri( "refund.card.content", {storePhoneNumber: phone, storeEmail: email} );
+
+        const emailPhonetic = ri( "store.emailPhonetic" );
+        const intentResponse = ri( "refund.intent.response", {storeEmailPhonetic: emailPhonetic} );
+
+        const locale                    = handlerInput.requestEnvelope.request.locale;
+
+        return handlerInput.jrb
+                            .speak( intentResponse )
+                            .withStandardCard( cardTitle, cardContent, config.REGIONAL[locale].storeLogoURL )
+                            .withShouldEndSession( true )
                             .getResponse( );
     }
 };
@@ -314,10 +351,21 @@ const CancelOrderIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'CancelOrderIntent';
     },
     handle( handlerInput ) {
-        return handlerInput.responseBuilder
-                            .speak( config.cancelOrderIntentResponse )
-                            .withStandardCard( config.cancelOrderTitle, config.cancelOrderCardResponse, config.logoURL )
-                            .withShouldEndSession( false )
+
+        const cardTitle = ri( "cancel.card.title" );
+        const email = ri( "store.email" );
+        const phone = ri( "store.phone" );
+        const cardContent = ri( "cancel.card.content", {storePhoneNumber: phone, storeEmail: email} );
+
+        const emailPhonetic = ri( "store.emailPhonetic" );
+        const intentResponse = ri( "cancel.intent.response", {storeEmailPhonetic: emailPhonetic} );
+
+        const locale                    = handlerInput.requestEnvelope.request.locale;
+
+        return handlerInput.jrb
+                            .speak( intentResponse )
+                            .withStandardCard( cardTitle, cardContent, config.REGIONAL[locale].storeLogoURL )
+                            .withShouldEndSession( true )
                             .getResponse( );
     }
 };
@@ -329,8 +377,8 @@ const HelpIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent';
     },
     handle( handlerInput ) {
-        return handlerInput.responseBuilder
-                            .speak( config.helpCommandsIntentResponse )
+        return handlerInput.jrb
+                            .speak( ri( "help.response" ) )
                             .withShouldEndSession( false )
                             .getResponse( );
     }
@@ -343,10 +391,11 @@ const OrderTrackerIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'OrderTrackerIntent';
     },
     handle( handlerInput ) {
+        const locale                    = handlerInput.requestEnvelope.request.locale;
         // Implement your code here to query the respective shipping service API's. This demo simply returns a static message.
-        return handlerInput.responseBuilder
-                            .speak( config.orderTrackerIntentResponse )
-                            .withStandardCard( config.orderTrackerTitle, config.orderTrackerCardResponse, config.logoURL )
+        return handlerInput.jrb
+                            .speak( ri( "orderTracking.intent.response" ) )
+                            .withStandardCard( ri( "orderTracking.card.title" ), ri( "orderTracking.card.content" ), config.REGIONAL[locale].storeLogoURL)
                             .withShouldEndSession( false )
                             .getResponse( );
     }
@@ -360,8 +409,8 @@ const ExitSkillIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'AMAZON.CancelIntent');
     },
     handle( handlerInput ) {
-        return handlerInput.responseBuilder
-                            .speak( config.exitSkillResponse )
+        return handlerInput.jrb
+                            .speak( ri( "exitSkill" ) )
                             .withShouldEndSession( true )
                             .getResponse( );
     }
@@ -373,10 +422,10 @@ const SessionEndedRequestHandler = {
         return handlerInput.requestEnvelope.request.type === 'SessionEndedRequest';
     },
     handle(handlerInput) {
-        return handlerInput.responseBuilder
-            .speak( config.exitSkillResponse )
-            .withShouldEndSession( true )
-            .getResponse();
+        return handlerInput.jrb
+                            .speak( ri( "exitSkill" ) )
+                            .withShouldEndSession( true )
+                            .getResponse();
     },
 };
 
@@ -387,28 +436,46 @@ const FallbackIntentHandler = {
                handlerInput.requestEnvelope.request.intent.name === 'AMAZON.FallbackIntent';
     },
     handle( handlerInput ) {
-        return handlerInput.responseBuilder
-                            .speak( config.fallbackHelpMessage )
+        const helpMessage = ri( "help.response" );
+        const fallbackMessage = ri( "fallback.response", {helpMessage: helpMessage} );
+        return handlerInput.jrb
+                            .speak( fallbackMessage )
                             .withShouldEndSession( false )
                             .getResponse( );
-    }
+}
 };
 
 // Generic error handling
 const ErrorHandler = {
-    canHandle( ) {
+    canHandle() {
         return true;
     },
-    handle( handlerInput, error ) {
-        // This is added with the intent that it is developer facing only
-        // Do not leave this here for production skills as customers will recieve these messages
-        const speechText = config.errorUnknown + ' ' + error.message;
+    handle(handlerInput, error) {
+        const debug = true;
+        const stack = error.stack.split('\n');
+        console.log(stack[0]);
+        console.log(stack[1]);
 
-        return handlerInput.responseBuilder
-            .speak( speechText )
-            .reprompt( speechText )
+        let errorLoc = stack[1].substring(stack[1].lastIndexOf('/') + 1, 900);
+
+        errorLoc = errorLoc.slice(0, -1);
+
+        const file = errorLoc.substring(0, errorLoc.indexOf(':'));
+        let line = errorLoc.substring(errorLoc.indexOf(':') + 1, 900);
+        line = line.substring(0, line.indexOf(':'));
+
+        let speechOutput = 'Sorry, an error occurred. ';
+        if(debug) {
+            speechOutput +=  error.message + ' in ' + file + ', line ' + line;
+        }
+
+        console.log("ERROR: " + speechOutput);
+
+        return handlerInput.jrb
+            .speak(speechOutput)
+            .reprompt(speechOutput)
             .getResponse();
-    }
+    },
 };
 
 // This request interceptor with each new session loads all global persistent attributes
@@ -472,19 +539,8 @@ function amazonPaySetup ( handlerInput, productType ) {
     attributesManager.setSessionAttributes( attributes );
     
     //Permission check
-    handleMissingAmazonPayPermission( handlerInput );
-
-    const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
-    const amazonPayPermission   = permissions.scopes[ config.scope ];
-
-    if ( amazonPayPermission.status === 'DENIED' ) {
-        return handlerInput.responseBuilder
-                            .speak( config.enablePermission )
-                            .withAskForPermissionsConsentCard( [ config.scope ] )
-                            .getResponse();
-    } 
-
-    var foo = handlerInput.requestEnvelope.request.locale ;
+    console.log("starting permission check");
+    utilities.handleMissingPermission( handlerInput, config.GENERAL.scope );
 
     // If you have a valid billing agreement from a previous session, skip the Setup action and call the Charge action instead
     const token                     = utilities.generateRandomString( 12 );
@@ -494,24 +550,25 @@ function amazonPaySetup ( handlerInput, productType ) {
     const setupRequestDirective     = directiveBuilder.createSetupDirective( setupPayload, token );
 
     
-    return handlerInput.responseBuilder
+    return handlerInput.jrb
                         .addDirective( setupRequestDirective )
                         .withShouldEndSession( true )
                         .getResponse( ); 
+
 }
 
 // Customer has requested checkout and wants to be charged
 function amazonPayCharge ( handlerInput ) {
 
     // Permission check
-    handleMissingAmazonPayPermission( handlerInput );
+    utilities.handleMissingPermission( handlerInput, config.GENERAL.scope );
     const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
-    const amazonPayPermission   = permissions.scopes[ config.scope ];
+    const amazonPayPermission   = permissions.scopes[ config.GENERAL.scope ];
 
     if ( amazonPayPermission.status === 'DENIED' ) {
-        return handlerInput.responseBuilder
-                            .speak( config.enablePermission )
-                            .withAskForPermissionsConsentCard( [ config.scope ] )
+        return handlerInput.jrb
+                            .speak( ri( 'enablePermission' ) )
+                            .withAskForPermissionsConsentCard( [ config.GENERAL.scope ] )
                             .getResponse();
     }    
 
@@ -529,79 +586,14 @@ function amazonPayCharge ( handlerInput ) {
     const chargePayload             = payloadBuilder.chargePayload(billingAgreementId, authorizationReferenceId, sellerOrderId, amount, locale);
     const chargeRequestDirective    = directiveBuilder.createChargeDirective(chargePayload, token);
 
-    return handlerInput.responseBuilder
+    return handlerInput.jrb
                         .addDirective( chargeRequestDirective )
                         .withShouldEndSession( true )
                         .getResponse( );
 }
 
-// Returns product specific string for summary or checkout intent responses
-function generateResponse ( stage, template, productType, shippingAddress ) {
-    let productPrice                = '';
-    let subscriptionPrice           = '';
-    let cartSummaryResponse         = template;
-    let cartSummarySubscription     = config.cartSummarySubscription;
-    let confirmationCardResponse    = template;
-    let confirmationItem            = '';     
-
-    switch ( productType ) {
-        case products.KIT:
-            productType             = 'Starter Kit';
-            confirmationItem        = 'Starter Kit';
-            productPrice            = 9;
-            cartSummarySubscription = '';
-            break;
-
-        case products.REFILL:
-            confirmationItem        = 'Refill Subscription';   
-            productPrice            = 20;
-            subscriptionPrice       = 20;
-            cartSummarySubscription = cartSummarySubscription.replace( '{subscriptionPrice}', subscriptionPrice );
-            break;
-
-        case products.UPGRADE:
-            productType             = 'Starter Kit';
-            confirmationItem        = 'Starter Kit + Refill Subscription';  
-            productPrice            = 9;
-            subscriptionPrice       = 18;
-            cartSummarySubscription = cartSummarySubscription.replace( '{subscriptionPrice}', subscriptionPrice );
-            break;
-
-        default:
-            console.log( 'Setup Error with productType' );
-
-            // This is added with the intent that it is developer facing only
-            // Do not leave this here for production skills as customers will recieve these messages            
-            cartSummaryResponse     = 'Error Setup with productType';
-            break;
-    }
-
-    cartSummaryResponse      = cartSummaryResponse.replace( '{productType}', productType ).replace( '{productPrice}', productPrice ).replace( '{shippingAddress}', shippingAddress );
-    cartSummaryResponse      += cartSummarySubscription + config.cartSummaryCheckout;
-
-    confirmationCardResponse = confirmationCardResponse.replace( '{productType}' , confirmationItem ).replace( '{productPrice}' , productPrice );
-
-    if ( stage === 'summary' ) {
-        return cartSummaryResponse;
-    } else if ( stage === 'confirmation') {
-        return confirmationCardResponse;
-    }
-}
-
-function handleMissingAmazonPayPermission( handlerInput ) {
-    const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
-    const amazonPayPermission   = permissions.scopes[ config.scope ];
-
-    if ( amazonPayPermission.status === 'DENIED' ) {
-        return handlerInput.responseBuilder
-                            .speak( config.enablePermission )
-                            .withAskForPermissionsConsentCard( [ config.scope ] )
-                            .getResponse();
-    }
-}
-
-exports.handler = askSDK.SkillBuilders
-						.custom( )
+const skillBuilder = new Jargon.JargonSkillBuilder({mergeSpeakAndReprompt : true}).installOnto(Alexa.SkillBuilders.custom());
+exports.handler = skillBuilder
 						.addRequestHandlers(
 							LaunchRequestHandler,
                             InProgressStarterKitIntent,

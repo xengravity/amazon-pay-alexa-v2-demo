@@ -12,7 +12,6 @@ const processPayloadVersioning = {
 };
 
 var setupPayload = function( language ) {
-    console.log( language );
     const regionalConfig    = config.REGIONAL[ language ];
     const generalConfig     = config.GENERAL;
     var payload = {
