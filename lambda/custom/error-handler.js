@@ -60,8 +60,6 @@ function handleErrors( handlerInput ) {
 			break;
 	}
 
-	utilities.debug( handlerInput );
-
 	// If it is a permissions error send a permission consent card to the user, otherwise .speak() error to resolve during testing
 	if ( permissionsError ) {
 	    return handlerInput.jrb
@@ -90,8 +88,6 @@ function handleBillingAgreementState( billingAgreementStatus, handlerInput ) {
 			errorMessage = ri( "error.unknown", {errorMessage: ""} );
 	}
 
-	utilities.debug( handlerInput );
-
 	return handlerInput.jrb
 		.speak( errorMessage )
 		.getResponse( );
@@ -112,8 +108,6 @@ function handleAuthorizationDeclines( authorizationStatusReasonCode, handlerInpu
 		default:
 			errorMessage = ri( "error.unknown", {errorMessage: ""} );
 	}
-
-	utilities.debug( handlerInput );
 	
 	return handlerInput.jrb
 		.speak( errorMessage )

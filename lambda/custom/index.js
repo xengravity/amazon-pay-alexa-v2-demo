@@ -17,8 +17,6 @@ const payloadBuilder    = require( 'payload-builder' );
 const s3Adapter         = require( 'ask-sdk-s3-persistence-adapter' ).S3PersistenceAdapter;
 let persistence         = '';
 
-const stringify = require('json-stringify-safe');
-
 // Welcome, are you interested in a starter kit or a refill subscription?
 const LaunchRequestHandler = {
     canHandle( handlerInput ) {
@@ -95,7 +93,7 @@ const InProgressStarterKitIntent = {
                     // TODO: Combine refill subscription logic here
 
                 } else {
-                    utilities.debug( 'Error: Had no match for products' );
+                    console.log( 'Error: Had no match for products' );
                 }
             } 
         }

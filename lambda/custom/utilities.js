@@ -1,7 +1,6 @@
 'use strict';
 const Jargon = require('@jargon/alexa-skill-sdk');
 const ri = Jargon.ri;
-const stringify = require('json-stringify-safe');
 const products         = require( 'products' );
 
 /**
@@ -175,18 +174,12 @@ function handleMissingPermission( handlerInput, scope ) {
     }
 }
 
-// Output object to console for debugging purposes
-function debug( handlerInput, message ) {
-	console.log( "debug" + ' ' + message + stringify( handlerInput ) );
-}
-
 module.exports = {
     'generateRandomString': 			generateRandomString,
     'getSimulationString': 				getSimulationString,
 	'getSlotValues': 					getSlotValues,
 	'resetSetup': 						resetSetup,
 	'findProductRepresentation': 		findProductRepresentation,
-	'handleMissingPermission':          handleMissingPermission,
-	'debug': 							debug
+	'handleMissingPermission':          handleMissingPermission
 };
 
