@@ -24,10 +24,10 @@ const REGIONAL = {
         checkoutLanguage:               'en_US',                                    // Optional; US must be en_US
         countryOfEstablishment:         'US',                                       // Required;
         ledgerCurrency:                 'USD',                                      // Required;
-        sandboxMode:                    true,                                       // Optional; Must be false for certification || production; Must be true for sandbox testing
+        sandboxMode:                    true,                                       // Optional; Must be false for certification & production; Must be true for sandbox testing
         sandboxCustomerEmailId:         'INSERT-YOUR-SANDBOX-EMAIL-ADDRESS',        // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
         sellerAuthorizationNote:        utilities.getSimulationString( '' ),        // Optional; Max 255 chars
-        softDescriptor:                 'No Nicks',                                 // Optional; Please provide a meaningful value, this is visibla on the buyers' statements. Max 16 chars.
+        softDescriptor:                 'No Nicks',                                 // Optional; Max 16 chars; This value is visible on customers credit card statements
         amount:                         '0.01',                                     // Required; Max $150,000.00 USD; Intentionally set to $.01 in the demo for testing purposes.
         currencyCode:                   'USD',                                      // Required;
 
@@ -104,6 +104,7 @@ const REGIONAL = {
 
 // EXITSKILL INTENT
     const exitSkillResponse                 = 'OK, bye for now';
+
 
 /** 
     The following strings are used to output errors to test the skill
