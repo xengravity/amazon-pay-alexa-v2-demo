@@ -1,11 +1,8 @@
 {
-  "name": "skill-sample-nodejs-no-nicks",
+  "name": "skill-sample-nodejs-amazon-pay",
   "version": "1.0.0",
-  "description": "",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
+  "description": "This demo showcases how to integrate Amazon Pay into a shopping experience.",
+  "author": "Tony Cordova <tcordov@amazon.com>",
   "license": "ISC",
   "dependencies": {
     "ask-sdk": "^2.4.0",

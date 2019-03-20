@@ -34,8 +34,8 @@
           "name": "No Nicks",
           "smallIconUri": "https://s3.amazonaws.com/CAPS-SSE/echo_developer/23bf/c2e52e552ee44a6099b06ac30bc713b4/APP_ICON?versionId=d6YX5pM5JDYLgTcFRTicg7KvFj8rAPBY&AWSAccessKeyId=AKIAJFEYRBGIHK2BBYKA&Expires=1551319004&Signature=gawNKWveGqtpMO7KdLZ4e0RTAwc%3D",
           "largeIconUri": "https://s3.amazonaws.com/CAPS-SSE/echo_developer/96f3/c5c84a64a51e498fa462c50974141ca3/APP_ICON_LARGE?versionId=E0Kk1TGSsweWB3o_QcxQ7At0kdNoCy6x&AWSAccessKeyId=AKIAJFEYRBGIHK2BBYKA&Expires=1551319004&Signature=y4qt8ujQmdDeH%2FAWqAHhfLYQln8%3D",
-          "summary": "TBD",
-          "description": "TBD",
+          "summary": "This demo showcases how to integrate Amazon Pay into a shopping experience.",
+          "description": "This demo showcases how to integrate Amazon Pay into shopping experiences. This demo is running in Sandbox Mode and will not charge your credit card. Find out more about Amazon Pay here: https://developer.amazon.com/docs/amazon-pay/amazon-pay-overview.html ",
           "examplePhrases": [
             "Alexa, open No Nicks",
             "Alexa, ask No Nicks for a starter kit",
@@ -47,12 +47,12 @@
             "shaving",
             "kit"
           ],
-          "updatesDescription": "TBD"
+          "updatesDescription": ""
         }
       },
       "isAvailableWorldwide": true,
       "distributionMode": "PUBLIC",
-      "testingInstructions": "tbd",
+      "testingInstructions": "",
       "category": "SHOPPING",
       "distributionCountries": []
     }
