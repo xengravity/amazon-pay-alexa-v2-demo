@@ -103,7 +103,7 @@ const REGIONAL = {
     const fallbackHelpMessage              = 'Hmm, I\'m not sure about that. ' + helpCommandsIntentResponse;
 
 // EXITSKILL INTENT
-    const exitSkillResponse                 = 'OK, bye for now';
+    const exitSkillResponse                = 'OK, bye for now';
 
 
 /** 

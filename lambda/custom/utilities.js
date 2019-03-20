@@ -95,9 +95,9 @@ function resetSetup ( handlerInput ) {
 }
 
 module.exports = {
-    'generateRandomString': 			generateRandomString,
-    'getSimulationString': 				getSimulationString,
-	'getSlotValues': 					getSlotValues,
-	'resetSetup': 						resetSetup,
+    'generateRandomString':     generateRandomString,
+    'getSimulationString':      getSimulationString,
+	'getSlotValues':            getSlotValues,
+	'resetSetup':               resetSetup,
 };
 

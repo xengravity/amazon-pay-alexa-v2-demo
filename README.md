@@ -1,9 +1,7 @@
 # Build An Alexa Skill with Amazon Pay - Demo Store
-This demo store showcases how to integrate Amazon Pay into your shopping experiences on Alexa.
+Do you currently sell goods or services on other channels but want to expand to Alexa to reach new and existing customers? Good news, with [Amazon Pay](https://developer.amazon.com/alexa-skills-kit/make-money/amazon-pay), you can offer a seamless voice purchasing experience to your customers, allowing them to purchase real-world goods and services via Alexa - without having to leave the voice experience.
 
-## Resources
-* [Amazon Pay Alexa Documentation](https://developer.amazon.com/docs/amazon-pay/amazon-pay-overview.html)
-* [Alexa Skills Kit Documentation](https://ask-sdk-for-nodejs.readthedocs.io/en/latest/)
+This custom skill is a demo store that showcases how to use Amazon Pay with your shopping experiences on Alexa.
 
 ## What You Will Need
 Before you start working on this skill, you will need to create the following accounts:
@@ -26,9 +24,6 @@ This repository contains the interaction model and skill code. It is structured 
 ## Running the Demo
 Launch the demo by saying, 'Alexa, open No Nicks'. If you receive an error, proceed to the [troubleshooting section](#troubleshooting).
 
-## Next Steps
-Read the integration guide: https://developer.amazon.com/docs/amazon-pay/amazon-pay-overview.html
-
 ## Troubleshooting
 
 If you are encountering issues with your skill, double check that you have completed the following:
@@ -44,3 +39,12 @@ If you are encountering issues with your skill, double check that you have compl
 1. Enable Voice Purchasing in your Alexa App ( with or without the voice code ).
 
 All other errors and decline handling can be found here: https://developer.amazon.com/docs/amazon-pay/payment-declines-and-processing-errors.html
+
+## Resources
+* [Amazon Pay Alexa Documentation](https://developer.amazon.com/docs/amazon-pay/amazon-pay-overview.html)
+* [Amazon Pay Certification Requirements](https://developer.amazon.com/docs/amazon-pay/certify-skill-with-amazon-pay.html)
+* [Alexa Skills Kit Documentation](https://ask-sdk-for-nodejs.readthedocs.io/en/latest/)
+
+## Questions?
+* If you have questions about integrating Amazon Pay into your skill [check the forums here](https://forums.developer.amazon.com/spaces/423/index.html)
+* If you have questions about Amazon Pay in general, take a look at our [help guide here](https://pay.amazon.com/us/help)
