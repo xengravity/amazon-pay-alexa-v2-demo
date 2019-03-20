@@ -3,7 +3,31 @@
     "default": {
       "skill_id": "",
       "was_cloned": false,
-      "merge": {}
+      "merge": {},
+      "resources": {
+        "manifest": {
+          "eTag": "0d990e0b4612264e8e66eddd0d1af94e"
+        },
+        "interactionModel": {
+          "en-US": {
+            "eTag": "f724639bcb8534bf7c24126b8b439ec6"
+          }
+        },
+        "lambda": [
+          {
+            "alexaUsage": [
+              "custom/default"
+            ],
+            "arn": "arn:aws:lambda:us-east-1:859669077786:function:no-nicks",
+            "awsRegion": "us-east-1",
+            "codeUri": "lambda/custom",
+            "functionName": "no-nicks",
+            "handler": "index.handler",
+            "revisionId": "994e14b7-c4ae-4298-adb2-0b6d9345982c",
+            "runtime": "nodejs8.10"
+          }
+        ]
+      }
     }
   }
 }
