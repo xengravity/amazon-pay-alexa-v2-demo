@@ -234,9 +234,9 @@ const SetupConnectionsResponseHandler = {
             attributesManager.setSessionAttributes( attributes );                      
 
             const shippingAddress           = connectionResponsePayload.billingAgreementDetails.destination.addressLine1;
-
             let productType                 = attributes.productType;
             let cartSummaryResponse         = generateResponse( 'summary', config.cartSummaryResponse, productType, shippingAddress );
+            
             return handlerInput.responseBuilder
                                 .speak( cartSummaryResponse )
                                 .withShouldEndSession( false )

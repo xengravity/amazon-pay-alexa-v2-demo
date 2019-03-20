@@ -10,11 +10,11 @@ const config = require( 'config' );
 
 // These are errors that will not be handled by Amazon Pay; Merchant must handle
 function handleErrors( handlerInput ) {
-	let   errorMessage 					= '';
-	let   permissionsError 				= false;
-	const actionResponseStatusCode 		= handlerInput.requestEnvelope.request.status.code;
-	const actionResponseStatusMessage 	= handlerInput.requestEnvelope.request.status.message;
-	const actionResponsePayloadMessage 	= handlerInput.requestEnvelope.request.payload.errorMessage;
+	let   errorMessage                     = '';
+	let   permissionsError                 = false;
+	const actionResponseStatusCode         = handlerInput.requestEnvelope.request.status.code;
+	const actionResponseStatusMessage      = handlerInput.requestEnvelope.request.status.message;
+	const actionResponsePayloadMessage     = handlerInput.requestEnvelope.request.payload.errorMessage;
 
 	switch ( actionResponseStatusMessage ) {
 		// Permissions errors - These must be resolved before a user can use Amazon Pay
@@ -45,10 +45,10 @@ function handleErrors( handlerInput ) {
 		case 'PeriodicAmountExceeded':
 		case 'ProviderNotAuthorized':
 		case 'ServiceUnavailable':
-			errorMessage = 	config.errorMessage 		+ 
-							config.errorStatusCode 		+ actionResponseStatusCode 		+ '.' +
-							config.errorStatusMessage 	+ actionResponseStatusMessage 	+ '.' +
-							config.errorPayloadMessage  + actionResponsePayloadMessage;
+			errorMessage = 	config.errorMessage          + 
+							config.errorStatusCode       + actionResponseStatusCode      + '.' +
+							config.errorStatusMessage    + actionResponseStatusMessage   + '.' +
+							config.errorPayloadMessage   + actionResponsePayloadMessage;
 			break;		
 
 		default:
@@ -125,5 +125,5 @@ module.exports = {
     'handleErrors': 					handleErrors,
     'handleBillingAgreementState': 		handleBillingAgreementState,
     'handleAuthorizationDeclines': 		handleAuthorizationDeclines,
-    'debug': 							debug
+    'debug':                            debug
 };
