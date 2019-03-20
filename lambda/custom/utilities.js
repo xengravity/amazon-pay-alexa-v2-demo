@@ -99,6 +99,5 @@ module.exports = {
     'getSimulationString': 				getSimulationString,
 	'getSlotValues': 					getSlotValues,
 	'resetSetup': 						resetSetup,
-
 };
 

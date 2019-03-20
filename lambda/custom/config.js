@@ -14,8 +14,8 @@ const GENERAL = {
     VERSION:                            '2.0',                                      // Required; 
     needAmazonShippingAddress:          true,                                       // Optional; Must be boolean
     paymentAction:                      'AuthorizeAndCapture',                      // Required; 'Authorize' or 'AuthorizeAndCapture'
-    transactionTimeout:                 0,                                          // Optional; The default value for Alexa transactions is 0
-    bucketName:                         'INSERT-YOUR-S3-BUCKET-NAME'                // Required; Used for S3 state management
+    transactionTimeout:                 0,                                          // Optional; The default and recommended value for Alexa transactions is 0
+    bucketName:                         'INSERT-YOUR-S3-BUCKET-NAME'                // Required; Used for skill state management
 };
 
 const REGIONAL = {
@@ -24,16 +24,16 @@ const REGIONAL = {
         checkoutLanguage:               'en_US',                                    // Optional; US must be en_US
         countryOfEstablishment:         'US',                                       // Required;
         ledgerCurrency:                 'USD',                                      // Required;
-        sandboxMode:                    true,                                       // Optional; Must be false for certification || production; Must be true for sandbox testing
+        sandboxMode:                    true,                                       // Optional; Must be false for certification & production; Must be true for sandbox testing
         sandboxCustomerEmailId:         'INSERT-YOUR-SANDBOX-EMAIL-ADDRESS',        // Optional; Required if sandboxMode equals true; Must setup Amazon Pay test account first
         sellerAuthorizationNote:        utilities.getSimulationString( '' ),        // Optional; Max 255 chars
-        softDescriptor:                 'No Nicks',                                 // Optional; Please provide a meaningful value, this is visibla on the buyers' statements. Max 16 chars.
-        amount:                         '0.01',                                     // Required; Max $150,000.00 USD
+        softDescriptor:                 'No Nicks',                                 // Optional; Max 16 chars; This value is visible on customers credit card statements
+        amount:                         '0.01',                                     // Required; Max $150,000.00 USD; Intentionally set to $.01 in the demo for testing purposes.
         currencyCode:                   'USD',                                      // Required;
 
         // SELLER ORDER ATTRIBUTES
         customInformation:              '',                                         // Optional; Max 1024 chars
-        sellerNote:                     'Thanks for shaving with No Nicks',                // Optional; Max 1024 chars, visible on confirmation mails to buyers
+        sellerNote:                     'Thanks for shaving with No Nicks',         // Optional; Max 1024 chars, visible on confirmation mails to buyers
         sellerStoreName:                'No Nicks',                                 // Optional; Documentation calls this out as storeName not sellerStoreName
     }
 };
@@ -52,11 +52,11 @@ const REGIONAL = {
 
 // LAUNCH INTENT
     const launchRequestWelcomeTitle        = 'Welcome to '+ REGIONAL[ 'en-US' ].sellerStoreName +'. '; 
-	const launchRequestWelcomeResponse     = launchRequestWelcomeTitle +'We have everything you need for the perfect shave.';
-	const launchRequestQuestionResponse    = 'Are you interested in a starter kit, or refills?';
+    const launchRequestWelcomeResponse     = launchRequestWelcomeTitle +'We have everything you need for the perfect shave.';
+    const launchRequestQuestionResponse    = 'Are you interested in a starter kit, or refills?';
 
 // NO INTENT
-    const noIntentResponse 				   = 'Okay. Do you want to order something else?';
+    const noIntentResponse                 = 'Okay. Do you want to order something else?';
 
 // CART SUMMARY
     const cartSummaryCheckout              = ' Do you want to check out now?';
@@ -99,11 +99,12 @@ const REGIONAL = {
 // HELP INTENT
     const helpCommandsIntentResponse       = 'To check order status, say where is my order. To cancel an order, say cancel order. To ask for a refund, say refund.';
 
-// Fallback INTENT
+// FALLBACK INTENT
     const fallbackHelpMessage              = 'Hmm, I\'m not sure about that. ' + helpCommandsIntentResponse;
 
 // EXITSKILL INTENT
     const exitSkillResponse                 = 'OK, bye for now';
+
 
 /** 
     The following strings are used to output errors to test the skill
@@ -111,16 +112,16 @@ const REGIONAL = {
 
 
 // ERROR RESPONSE STRINGS
-    const scope                            = 'payments:autopay_consent';                                        // Required; Used request permissions for Amazon Pay
-	const enablePermission 				   = 'To make purchases in this skill, you need to enable Amazon Pay and turn on voice purchasing. To help, I sent a card to your Alexa app.';
-	const errorMessage 					   = 'Merchant error occurred. ';
-	const errorUnknown 					   = 'Unknown error occurred. ';
-	const errorStatusCode 				   = 'Status code: ';
-	const errorStatusMessage 			   = ' Status message: ';
-	const errorPayloadMessage 			   = ' Payload message: ';
-	const errorBillingAgreement			   = 'Billing agreement state is ';
-	const errorBillingAgreementMessage 	   = '. Reach out to the user to resolve this issue.';
-	const authorizationDeclineMessage 	   = 'Your order was not placed and you have not been charged.';
+    const scope                            = 'payments:autopay_consent';    // Required; Used request permissions for Amazon Pay
+    const enablePermission                 = 'To make purchases in this skill, you need to enable Amazon Pay and turn on voice purchasing. To help, I sent a card to your Alexa app.';
+    const errorMessage                     = 'Merchant error occurred. ';
+    const errorUnknown                     = 'Unknown error occurred. ';
+    const errorStatusCode                  = 'Status code: ';
+    const errorStatusMessage               = ' Status message: ';
+    const errorPayloadMessage              = ' Payload message: ';
+    const errorBillingAgreement            = 'Billing agreement state is ';
+    const errorBillingAgreementMessage 	   = '. Reach out to the user to resolve this issue.';
+    const authorizationDeclineMessage 	   = 'Your order was not placed and you have not been charged.';
     const debug                            = 'debug';
 
 
@@ -133,13 +134,13 @@ module.exports = {
     'launchRequestWelcomeResponse':    	launchRequestWelcomeResponse,
     'launchRequestQuestionResponse':   	launchRequestQuestionResponse,
 
-    'noIntentResponse': 				noIntentResponse,
+    'noIntentResponse':                 noIntentResponse,
 
     'confirmationTitle':                confirmationTitle,
-    'confirmationIntentResponse': 		confirmationIntentResponse,
+    'confirmationIntentResponse':       confirmationIntentResponse,
     'confirmationCardResponse':         confirmationCardResponse,
 
-    'storeURL': 						storeURL,
+    'storeURL':                         storeURL,
     'logoURL':                          logoURL,
     'storePhoneNumber':                 storePhoneNumber,
 
@@ -165,16 +166,16 @@ module.exports = {
 
     'exitSkillResponse':                exitSkillResponse,
     
-	// ERROR RESPONSE STRINGS
-    'enablePermission': 				enablePermission,
-    'scope': 							scope,
-    'errorMessage': 					errorMessage,
-    'errorUnknown': 					errorUnknown,
-    'errorStatusCode': 					errorStatusCode,
-    'errorStatusMessage': 				errorStatusMessage,
-    'errorPayloadMessage': 				errorPayloadMessage,
-    'errorBillingAgreement': 			errorBillingAgreement,
+    // ERROR RESPONSE STRINGS
+    'enablePermission':                 enablePermission,
+    'scope':                            scope,
+    'errorMessage':                     errorMessage,
+    'errorUnknown':                     errorUnknown,
+    'errorStatusCode':                  errorStatusCode,
+    'errorStatusMessage':               errorStatusMessage,
+    'errorPayloadMessage':              errorPayloadMessage,
+    'errorBillingAgreement':            errorBillingAgreement,
     'errorBillingAgreementMessage': 	errorBillingAgreementMessage,
-    'authorizationDeclineMessage': 		authorizationDeclineMessage,
+    'authorizationDeclineMessage':      authorizationDeclineMessage,
     'debug':                            debug
 };
