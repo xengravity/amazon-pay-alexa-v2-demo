@@ -43,8 +43,7 @@ All other errors and decline handling can be found here: https://developer.amazo
 ## Resources
 * [Amazon Pay Alexa Documentation](https://developer.amazon.com/docs/amazon-pay/amazon-pay-overview.html)
 * [Amazon Pay Certification Requirements](https://developer.amazon.com/docs/amazon-pay/certify-skill-with-amazon-pay.html)
-* [Alexa Skills Kit Documentation](https://ask-sdk-for-nodejs.readthedocs.io/en/latest/)
-
-## Questions?
-* If you have questions about integrating Amazon Pay into your skill [check the forums here](https://forums.developer.amazon.com/spaces/423/index.html)
-* If you have questions about Amazon Pay in general, take a look at our [help guide here](https://pay.amazon.com/us/help)
+* [Official Alexa Skills Kit SDK for Node.js](https://ask-sdk-for-nodejs.readthedocs.io/en/latest/) - The Official Node.js SDK Documentation
+* [Official Alexa Skills Kit Documentation](https://developer.amazon.com/docs/ask-overviews/build-skills-with-the-alexa-skills-kit.html) - Official Alexa Skills Kit Documentation
+* [Amazon Developer Forums](https://forums.developer.amazon.com/spaces/423/index.html) - Join the conversation!
+* [Amazon Pay Help Guide](https://pay.amazon.com/us/help)

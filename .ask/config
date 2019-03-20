@@ -18,12 +18,12 @@
             "alexaUsage": [
               "custom/default"
             ],
-            "arn": "arn:aws:lambda:us-east-1:859669077786:function:no-nicks",
+            "arn": "",
             "awsRegion": "us-east-1",
             "codeUri": "lambda/custom",
             "functionName": "no-nicks",
             "handler": "index.handler",
-            "revisionId": "994e14b7-c4ae-4298-adb2-0b6d9345982c",
+            "revisionId": "1ab2c198-eb9d-41d3-b713-7bbaceadd318",
             "runtime": "nodejs8.10"
           }
         ]

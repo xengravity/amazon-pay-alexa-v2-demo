@@ -125,5 +125,5 @@ module.exports = {
     'handleErrors': 					handleErrors,
     'handleBillingAgreementState': 		handleBillingAgreementState,
     'handleAuthorizationDeclines': 		handleAuthorizationDeclines,
-    'debug': 							debug
+    'debug':                            debug
 };
