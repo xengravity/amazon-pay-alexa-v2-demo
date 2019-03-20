@@ -31,9 +31,9 @@ const LaunchRequestHandler = {
         return handlerInput.responseBuilder
                             .speak( config.launchRequestWelcomeResponse + ' ' + config.launchRequestQuestionResponse )
                             .withStandardCard( config.launchRequestWelcomeTitle, config.storeURL, config.logoURL )
-				            .reprompt( config.launchRequestQuestionResponse )
+                            .reprompt( config.launchRequestQuestionResponse )
                             .withShouldEndSession( false )
-				            .getResponse( );
+                            .getResponse( );
     }
 };
 
@@ -219,8 +219,8 @@ const SetupConnectionsResponseHandler = {
         }
 
         // Get the billingAgreementId and billingAgreementStatus from the Setup Connections.Response
-        const billingAgreementId 			= connectionResponsePayload.billingAgreementDetails.billingAgreementId;
-        const billingAgreementStatus 		= connectionResponsePayload.billingAgreementDetails.billingAgreementStatus;              
+        const billingAgreementId            = connectionResponsePayload.billingAgreementDetails.billingAgreementId;
+        const billingAgreementStatus        = connectionResponsePayload.billingAgreementDetails.billingAgreementStatus;              
 
          // If billingAgreementStatus is valid, Charge the payment method    
         if ( billingAgreementStatus === 'OPEN' ) {
@@ -242,7 +242,7 @@ const SetupConnectionsResponseHandler = {
                                 .withShouldEndSession( false )
                                 .getResponse( );                    
 
-        // If billingAgreementStatus is not valid, do not Charge the payment method	
+        // If billingAgreementStatus is not valid, do not Charge the payment method 
         } else {
             return error.handleBillingAgreementState( billingAgreementStatus, handlerInput );
         }
@@ -259,7 +259,7 @@ const ChargeConnectionsResponseHandler = {
         const connectionResponsePayload     = handlerInput.requestEnvelope.request.payload;
         const connectionResponseStatusCode  = handlerInput.requestEnvelope.request.status.code;
 
-    	// If there are integration or runtime errors, do not charge the payment method
+        // If there are integration or runtime errors, do not charge the payment method
         if ( connectionResponseStatusCode != 200 ) {
             return error.handleErrors( handlerInput );
         } 
@@ -471,7 +471,7 @@ function amazonPaySetup ( handlerInput, productType ) {
     attributes.productType          = productType;
     attributesManager.setSessionAttributes( attributes );
     
-    //Permission check
+    // Permission check
     handleMissingAmazonPayPermission( handlerInput );
 
     const permissions           = handlerInput.requestEnvelope.context.System.user.permissions;
@@ -601,9 +601,9 @@ function handleMissingAmazonPayPermission( handlerInput ) {
 }
 
 exports.handler = askSDK.SkillBuilders
-						.custom( )
-						.addRequestHandlers(
-							LaunchRequestHandler,
+                        .custom( )
+                        .addRequestHandlers(
+                            LaunchRequestHandler,
                             InProgressStarterKitIntent,
                             CompletedRefillIntentHandler,
                             YesIntentHandler,
@@ -621,7 +621,7 @@ exports.handler = askSDK.SkillBuilders
                         .addRequestInterceptors( PersistenceRequestInterceptor )
                         .addResponseInterceptors( PersistenceResponseInterceptor )                        
                         .withPersistenceAdapter( persistence = new s3Adapter( 
-                            { bucketName: config.GENERAL.bucketName } ))
+                            { bucketName: config.GENERAL.bucketName } ) )
                         .addErrorHandlers(
                             ErrorHandler )
-						.lambda( );
+                        .lambda( );
