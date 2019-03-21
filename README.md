@@ -47,3 +47,8 @@ All other errors and decline handling can be found here: https://developer.amazo
 * [Official Alexa Skills Kit Documentation](https://developer.amazon.com/docs/ask-overviews/build-skills-with-the-alexa-skills-kit.html) - Official Alexa Skills Kit Documentation
 * [Amazon Developer Forums](https://forums.developer.amazon.com/spaces/423/index.html) - Join the conversation!
 * [Amazon Pay Help Guide](https://pay.amazon.com/us/help)
+
+
+## License
+
+This library is licensed under the Amazon Software License.
