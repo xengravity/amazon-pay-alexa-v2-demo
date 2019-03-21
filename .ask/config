@@ -3,30 +3,16 @@
     "default": {
       "skill_id": "",
       "was_cloned": false,
-      "merge": {},
-      "resources": {
-        "manifest": {
-          "eTag": "0d990e0b4612264e8e66eddd0d1af94e"
-        },
-        "interactionModel": {
-          "en-US": {
-            "eTag": "f724639bcb8534bf7c24126b8b439ec6"
+      "merge": {
+        "skillManifest": {
+          "apis": {
+            "custom": {
+              "endpoint": {
+                "uri": "demo-store-amazon-pay"
+              }
+            }
           }
-        },
-        "lambda": [
-          {
-            "alexaUsage": [
-              "custom/default"
-            ],
-            "arn": "",
-            "awsRegion": "us-east-1",
-            "codeUri": "lambda/custom",
-            "functionName": "no-nicks",
-            "handler": "index.handler",
-            "revisionId": "1ab2c198-eb9d-41d3-b713-7bbaceadd318",
-            "runtime": "nodejs8.10"
-          }
-        ]
+        }
       }
     }
   }
